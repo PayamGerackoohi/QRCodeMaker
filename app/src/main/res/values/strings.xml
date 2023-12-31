@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">QR Code Maker</string>
+    <string name="title">Title</string>
+    <string name="text">Text</string>
+    <string name="phone">Phone</string>
+    <string name="name">Name</string>
+    <string name="name_prefix">Prefix</string>
+    <string name="name_first_name">First Name</string>
+    <string name="name_middle_name">Middle Name</string>
+    <string name="name_last_name">Last Name</string>
+    <string name="name_postfix">Postfix</string>
+    <string name="phone_call">Phone Call</string>
+    <string name="me_card">Me-Card</string>
+    <string name="qrcode_type_description_text">Simple text data. Could be used for raw text, web-link, ….</string>
+    <string name="qrcode_type_description_phone_call">The QrCode reader can suggest calling the number.</string>
+    <string name="qrcode_type_description_me_card">The QrCode reader can suggest adding the Me-Card to the contacts.</string>
+</resources>
