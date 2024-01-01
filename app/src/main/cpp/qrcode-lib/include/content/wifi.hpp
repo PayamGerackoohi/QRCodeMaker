@@ -1,6 +1,7 @@
 #ifndef WIFI_HPP
 #define WIFI_HPP
 
+#include <memory>
 #include <ostream>
 #include <string>
 

@@ -1,6 +1,7 @@
 #ifndef SMS_HPP
 #define SMS_HPP
 
+#include <memory>
 #include <ostream>
 #include <string>
 

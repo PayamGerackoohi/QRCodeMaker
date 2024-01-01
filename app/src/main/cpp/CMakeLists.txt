@@ -25,31 +25,14 @@ project("qrcodemaker")
 # System.loadLibrary() and pass the name of the library defined here;
 # for GameActivity/NativeActivity derived applications, the same library name must be
 # used in the AndroidManifest.xml file.
+add_subdirectory(qrcode-lib)
+
 include_directories(include lib util)
 add_library(${CMAKE_PROJECT_NAME} SHARED
         qrcodemaker.cpp
         util/jni-util.cpp
-        lib/qrcode/content/app-market.cpp
-        lib/qrcode/content/biz-card.cpp
-        lib/qrcode/content/calendar.cpp
-        lib/qrcode/content/email.cpp
-        lib/qrcode/content/face-time.cpp
-        lib/qrcode/content/geo.cpp
-        lib/qrcode/content/me-card.cpp
-        lib/qrcode/content/phone-call.cpp
-        lib/qrcode/content/sms.cpp
-        lib/qrcode/content/v-card.cpp
-        lib/qrcode/content/wifi.cpp
-        lib/qrcode/qrcode-util.cpp
-        lib/qrcode/qrcodegen.cpp
-        lib/util/string-util.cpp
         )
-
-#include_directories(lib)
-#add_library(${CMAKE_PROJECT_NAME} SHARED
-#    # List C/C++ source files with relative paths to this CMakeLists.txt.
-#    qrcodemaker.cpp
-#        )
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE qrcode-lib/include)
 
 # Specifies libraries CMake should link to your target library. You
 # can link libraries from various origins, such as libraries defined in this
@@ -58,4 +41,5 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
         # List libraries link to the target library
         android
         log
+        qrcode
         )

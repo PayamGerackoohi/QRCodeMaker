@@ -1,6 +1,7 @@
 #ifndef GEO_HPP
 #define GEO_HPP
 
+#include <memory>
 #include <ostream>
 #include <string>
 

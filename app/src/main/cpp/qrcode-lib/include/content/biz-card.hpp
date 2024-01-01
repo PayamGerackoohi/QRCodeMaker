@@ -1,6 +1,7 @@
 #ifndef BIZ_CARD_HPP
 #define BIZ_CARD_HPP
 
+#include <memory>
 #include <ostream>
 #include <string>
 

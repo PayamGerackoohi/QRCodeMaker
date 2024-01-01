@@ -1,6 +1,7 @@
 #ifndef VCARD_HPP
 #define VCARD_HPP
 
+#include <memory>
 #include <ostream>
 #include <string>
 #include <vector>

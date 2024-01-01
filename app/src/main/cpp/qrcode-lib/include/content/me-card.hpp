@@ -1,6 +1,7 @@
 #ifndef ME_CARD_HPP
 #define ME_CARD_HPP
 
+#include <memory>
 #include <ostream>
 #include <string>
 

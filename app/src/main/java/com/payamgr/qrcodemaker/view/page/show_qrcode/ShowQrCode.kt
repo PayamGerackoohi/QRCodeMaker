@@ -125,13 +125,13 @@ object ShowQrCode {
                         ecc = state.ecc,
                         onEccChanged = viewModel::onEccChanged,
                     )
+                    RemoveConfirmationBottomSheet(
+                        show = showConfirmation,
+                        onDismiss = { showConfirmation = false },
+                        title = content.title,
+                        removeContent = viewModel::removeContent,
+                    )
                 }
-                RemoveConfirmationBottomSheet(
-                    show = showConfirmation,
-                    onDismiss = { showConfirmation = false },
-                    title = content.title,
-                    removeContent = viewModel::removeContent,
-                )
             }
         } ?: Text(text = "Invalid Content!")
     }

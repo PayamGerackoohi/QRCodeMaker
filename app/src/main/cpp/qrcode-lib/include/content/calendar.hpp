@@ -1,6 +1,7 @@
 #ifndef CALENDAR_HPP
 #define CALENDAR_HPP
 
+#include <memory>
 #include <ostream>
 #include <string>
 

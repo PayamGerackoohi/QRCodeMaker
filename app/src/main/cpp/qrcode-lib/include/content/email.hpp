@@ -1,6 +1,7 @@
 #ifndef EMAIL_HPP
 #define EMAIL_HPP
 
+#include <memory>
 #include <ostream>
 #include <string>
 #include <vector>

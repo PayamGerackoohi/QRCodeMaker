@@ -1,4 +1,5 @@
 #include "qrcode-util.hpp"
+#include <climits>
 #include <sstream>
 
 using qrcodegen::QrCode;
