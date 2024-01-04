@@ -454,7 +454,6 @@ namespace qrcodegen {
             throw std::invalid_argument("Invalid argument");
 
         // Calculate parameter numbers
-        // todo test this 'static_cast<unsigned char>'s
         int numBlocks = static_cast<unsigned char>(NUM_ERROR_CORRECTION_BLOCKS[static_cast<int>(errorCorrectionLevel)][version]);
         int blockEccLen = static_cast<unsigned char>(ECC_CODEWORDS_PER_BLOCK[static_cast<int>(errorCorrectionLevel)][version]);
         int rawCodewords = getNumRawDataModules(version) / 8;

@@ -1,16 +1,11 @@
 package com.payamgr.qrcodemaker.data.database.entity
 
 import androidx.room.Entity
-import androidx.room.Ignore
 import androidx.room.PrimaryKey
-import com.payamgr.qrcodemaker.data.QrCodeMaker
 import com.payamgr.qrcodemaker.data.model.Content
-import com.payamgr.qrcodemaker.data.model.ErrorCorrectionCodeLevel
 import com.payamgr.qrcodemaker.data.model.InputData
 import com.payamgr.qrcodemaker.data.model.InputId
 import com.payamgr.qrcodemaker.data.model.QrCodeType
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 @Entity(tableName = "text_content")
 data class TextContent(
@@ -22,11 +17,7 @@ data class TextContent(
 
     override val qrCodeType get() = QrCodeType.Text(text)
 
-    override suspend fun qrCode(ecc: ErrorCorrectionCodeLevel) = withContext(Dispatchers.Default) {
-        QrCodeMaker.text(text, ecc.ordinal)
-    }
-
-    override fun print() = buildString {
+    override fun string() = buildString {
         appendLine("Text:")
         append(text)
     }

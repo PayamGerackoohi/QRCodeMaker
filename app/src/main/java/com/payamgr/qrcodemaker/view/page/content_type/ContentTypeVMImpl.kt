@@ -2,7 +2,7 @@ package com.payamgr.qrcodemaker.view.page.content_type
 
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.payamgr.qrcodemaker.data.model.QrCodeType
-import com.payamgr.qrcodemaker.data.model.TypeUtil
+import com.payamgr.qrcodemaker.data.util.TypeUtil
 import com.payamgr.qrcodemaker.data.model.event.ContentTypeEvent
 import com.payamgr.qrcodemaker.data.model.state.ContentTypeState
 import com.payamgr.qrcodemaker.data.repository.ContentRepository

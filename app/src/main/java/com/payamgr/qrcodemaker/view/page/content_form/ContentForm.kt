@@ -54,6 +54,7 @@ import com.payamgr.qrcodemaker.data.model.InputData
 import com.payamgr.qrcodemaker.data.model.InputId
 import com.payamgr.qrcodemaker.data.model.QrCodeType
 import com.payamgr.qrcodemaker.data.model.event.ContentFormEvent
+import com.payamgr.qrcodemaker.data.util.isValid
 import com.payamgr.qrcodemaker.view.module.InputModule
 import com.payamgr.qrcodemaker.view.theme.QRCodeMakerTheme
 import kotlinx.coroutines.flow.Flow

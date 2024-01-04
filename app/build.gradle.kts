@@ -164,9 +164,13 @@ tasks.register("jacocoCoverage", JacocoReport::class) {
     val sourceBase = packageName.replace(".", "/")
     val excludes = listOf(
         "$sourceBase/QrCodeMakerApp*",
-        "$sourceBase/data/hilt/**",
+        "$sourceBase/data/database/*_Impl*",
+        "$sourceBase/data/database/dao/*Dao_Impl*",
+        "$sourceBase/data/database/QrDatabaseImpl*",
+        "$sourceBase/data/di/**",
         "$sourceBase/data/model/**",
-        "$sourceBase/ui/**",
+        "$sourceBase/data/NativeQrCodeMakerImpl*",
+        "$sourceBase/view/**",
     )
 
     sourceDirectories.setFrom("${project.projectDir}/src/main/java")
@@ -185,10 +189,14 @@ koverReport {
                 "dagger*",
                 "hilt*",
                 "*_Factory",
-                "$packageName.QrCodeMakerApp*",
-                "$packageName.data.hilt.*",
+                "$packageName.QrCodeMakerApp",
+                "$packageName.data.database.*_Impl*",
+                "$packageName.data.database.dao.*Dao_Impl*",
+                "$packageName.data.database.QrDatabaseImpl",
+                "$packageName.data.di.*",
                 "$packageName.data.model.*",
-                "$packageName.ui.*",
+                "$packageName.data.NativeQrCodeMakerImpl",
+                "$packageName.view.*",
             )
         }
     }

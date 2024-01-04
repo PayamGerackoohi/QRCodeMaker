@@ -14,3 +14,13 @@ Currently supports:
 ![word detail](docs/images/show_qr_code_1.webp)
 ![word detail](docs/images/show_qr_code_2.webp)
 
+## Code Quality
+### Test Results
+- Unit Test
+![word detail](docs/images/test-results/unit_tests.webp)
+
+### Test Coverage
+- Kover
+![word detail](docs/images/test-results/kover.webp)
+- Jacoco
+![word detail](docs/images/test-results/jacoco.webp)

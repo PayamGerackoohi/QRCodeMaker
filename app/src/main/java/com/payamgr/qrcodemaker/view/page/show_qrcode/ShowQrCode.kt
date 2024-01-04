@@ -121,7 +121,7 @@ object ShowQrCode {
                     PageContent(
                         isPortrait = maxWidth < maxHeight,
                         qrCode = state.qrCode,
-                        text = content.print(),
+                        text = content.string(),
                         ecc = state.ecc,
                         onEccChanged = viewModel::onEccChanged,
                     )

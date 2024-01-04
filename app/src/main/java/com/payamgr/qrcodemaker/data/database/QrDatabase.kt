@@ -9,6 +9,12 @@ import com.payamgr.qrcodemaker.data.database.entity.MeCardContent
 import com.payamgr.qrcodemaker.data.database.entity.PhoneCallContent
 import com.payamgr.qrcodemaker.data.database.entity.TextContent
 
+interface QrDatabase {
+    fun textContentDao(): TextContentDao
+    fun phoneCallContentDao(): PhoneCallContentDao
+    fun meCardContentDao(): MeCardContentDao
+}
+
 @Database(
     entities = [
         MeCardContent::class,
@@ -16,8 +22,4 @@ import com.payamgr.qrcodemaker.data.database.entity.TextContent
         TextContent::class,
     ], version = 1
 )
-abstract class QrDatabase : RoomDatabase() {
-    abstract fun meCardContentDao(): MeCardContentDao
-    abstract fun phoneCallContentDao(): PhoneCallContentDao
-    abstract fun textContentDao(): TextContentDao
-}
+abstract class QrDatabaseImpl : RoomDatabase(), QrDatabase

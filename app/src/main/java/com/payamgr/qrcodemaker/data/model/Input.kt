@@ -15,14 +15,3 @@ sealed class Input {
 
     data class Group(@StringRes val titleId: Int, val inputs: List<Single>) : Input()
 }
-
-enum class InputId {
-    Title,
-    Text,
-    Phone,
-    FirstName,
-    LastName,
-}
-// NamePrefix,
-// MiddleName,
-// NamePostfix,

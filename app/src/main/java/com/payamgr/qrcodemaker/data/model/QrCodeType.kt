@@ -28,14 +28,14 @@ sealed class QrCodeType(@StringRes val titleId: Int, @StringRes val descriptionI
             Input.Group(
                 R.string.name,
                 listOf(
-//                    Input.Single(InputId.NamePrefix, R.string.name_prefix, KeyboardType.Text, true),
                     Input.Single(InputId.FirstName, R.string.name_first_name, firstName, KeyboardType.Text),
-//                    Input.Single(InputId.MiddleName, R.string.name_middle_name, KeyboardType.Text, true),
                     Input.Single(InputId.LastName, R.string.name_last_name, lastName, KeyboardType.Text),
-//                    Input.Single(InputId.NamePostfix, R.string.name_postfix, KeyboardType.Text, true),
                 ),
             ),
             Input.Single(InputId.Phone, R.string.phone, phone, KeyboardType.Phone),
         ),
     )
 }
+// Input.Single(InputId.NamePrefix, R.string.name_prefix, KeyboardType.Text, true),
+// Input.Single(InputId.MiddleName, R.string.name_middle_name, KeyboardType.Text, true),
+// Input.Single(InputId.NamePostfix, R.string.name_postfix, KeyboardType.Text, true),

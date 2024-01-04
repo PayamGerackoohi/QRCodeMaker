@@ -3,6 +3,7 @@ package com.payamgr.qrcodemaker.data.di
 import android.content.Context
 import androidx.room.Room
 import com.payamgr.qrcodemaker.data.database.QrDatabase
+import com.payamgr.qrcodemaker.data.database.QrDatabaseImpl
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,6 +15,6 @@ import dagger.hilt.components.SingletonComponent
 class DatabaseModule {
     @Provides
     fun provideDatabase(@ApplicationContext context: Context): QrDatabase = Room
-        .databaseBuilder(context, QrDatabase::class.java, "qr-code-maker.db")
+        .databaseBuilder(context, QrDatabaseImpl::class.java, "qr-code-maker.db")
         .build()
 }

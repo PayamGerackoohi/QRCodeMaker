@@ -10,7 +10,7 @@ interface ContentRepository {
     suspend fun loadContents(): StateFlow<List<Content>>
     suspend fun push(content: Content)
     suspend fun push(type: QrCodeType)
-    suspend fun add(content: Content)
-    suspend fun update(content: Content)
-    suspend fun removeCurrentContent()
+    suspend fun add(content: Content): Unit?
+    suspend fun update(content: Content): Unit?
+    suspend fun removeCurrentContent(): Unit?
 }
