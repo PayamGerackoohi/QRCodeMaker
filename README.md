@@ -7,12 +7,19 @@ Currently supports:
 - Me-Card
 
 ## Preview
+### Home
+![word detail](docs/images/home.webp)
+
+### Content Type
+![word detail](docs/images/content_type.webp)
+
 ### Me-Card Form
 ![word detail](docs/images/me_card.webp)
 
 ### Show QR-Code
 ![word detail](docs/images/show_qr_code_1.webp)
 ![word detail](docs/images/show_qr_code_2.webp)
+![word detail](docs/images/show_qr_code_fullscreen.webp)
 
 ## Code Quality
 ### Test Results

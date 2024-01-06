@@ -12,4 +12,3 @@ rm -rf $dst
 mv QRCodeMaker-cpp-1.0.0/lib $dst
 
 rm -rf .temp
-

@@ -26,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.payamgr.qrcodemaker.data.model.ErrorCorrectionCodeLevel
 import com.payamgr.qrcodemaker.data.model.ErrorCorrectionCodeLevel.*
+import com.payamgr.qrcodemaker.data.model.action.ReactiveAction
 import com.payamgr.qrcodemaker.view.theme.QRCodeMakerTheme
 
 @Preview
@@ -36,8 +37,10 @@ fun ErrorCorrectionModule_Preview() {
             Column {
                 var level by remember { mutableStateOf(Medium) }
                 ErrorCorrectionModule(
-                    currentEcc = level,
-                    onEccChanged = { level = it },
+                    eccAction = ReactiveAction(
+                        data = level,
+                        onDataChanged = { level = it },
+                    ),
                 )
             }
         }
@@ -47,10 +50,7 @@ fun ErrorCorrectionModule_Preview() {
 private val levels = ErrorCorrectionCodeLevel.values()
 
 @Composable
-fun ErrorCorrectionModule(
-    currentEcc: ErrorCorrectionCodeLevel,
-    onEccChanged: (ErrorCorrectionCodeLevel) -> Unit,
-) {
+fun ErrorCorrectionModule(eccAction: ReactiveAction<ErrorCorrectionCodeLevel>) {
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
         modifier = Modifier.fillMaxWidth()
@@ -58,13 +58,13 @@ fun ErrorCorrectionModule(
         levels.forEach { level ->
             Item(
                 label = level.name,
-                isSelected = level == currentEcc,
+                isSelected = level == eccAction.data,
                 shape = when (level) {
                     Low -> RoundedCornerShape(bottomStart = 16.dp, topStart = 16.dp)
                     Medium -> RectangleShape
                     High -> RoundedCornerShape(bottomEnd = 16.dp, topEnd = 16.dp)
                 },
-                onClick = { onEccChanged(level) },
+                onClick = { eccAction.onDataChanged(level) },
             )
         }
     }

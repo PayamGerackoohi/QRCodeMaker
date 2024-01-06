@@ -1,10 +1,12 @@
 package com.payamgr.qrcodemaker.view.page.content_type
 
-import androidx.compose.foundation.layout.Arrangement
+import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -25,17 +27,33 @@ import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.payamgr.qrcodemaker.data.model.QrCodeType
 import com.payamgr.qrcodemaker.data.model.event.ContentTypeEvent
+import com.payamgr.qrcodemaker.data.model.state.ContentTypeState
 import com.payamgr.qrcodemaker.view.theme.QRCodeMakerTheme
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.flowOf
 
 @Preview
 @Composable
-fun AddContentPage_Preview() {
+fun ContentTypePage_Preview() {
     QRCodeMakerTheme {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             Mavericks.initialize(LocalContext.current)
-            ContentType.Page {}
+            ContentType.Page(
+                navigateToContentForm = {},
+                viewModel = object : ContentTypeVM(
+                    ContentTypeState(
+                        qrCodeTypes = listOf(
+                            QrCodeType.Text(),
+                            QrCodeType.PhoneCall(),
+                            QrCodeType.MeCard(),
+                        )
+                    )
+                ) {
+                    override val eventFlow: Flow<ContentTypeEvent> get() = flowOf()
+                    override fun showContentForm(type: QrCodeType) {}
+                },
+            )
         }
     }
 }
@@ -55,15 +73,32 @@ object ContentType {
     fun Page(viewModel: ContentTypeVM = mavericksViewModel(), navigateToContentForm: () -> Unit) {
         val state by viewModel.collectAsState()
         HandleEvents(viewModel.eventFlow, navigateToContentForm)
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(16.dp),
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(250.dp),
+            contentPadding = PaddingValues(8.dp),
         ) {
             items(state.qrCodeTypes) {
-                Button(onClick = { viewModel.showContentForm(it) }) {
-                    Text(text = stringResource(it.titleId))
-                }
+                QrCodeTypeItem(
+                    titleId = it.titleId,
+                    onItemClicked = { viewModel.showContentForm(it) },
+                    modifier = Modifier.padding(8.dp)
+                )
             }
+        }
+    }
+
+    @Composable
+    fun QrCodeTypeItem(
+        @StringRes titleId: Int,
+        onItemClicked: () -> Unit,
+        modifier: Modifier = Modifier,
+    ) {
+        Button(
+            onClick = { onItemClicked() },
+            contentPadding = PaddingValues(24.dp),
+            modifier = modifier,
+        ) {
+            Text(text = stringResource(titleId))
         }
     }
 

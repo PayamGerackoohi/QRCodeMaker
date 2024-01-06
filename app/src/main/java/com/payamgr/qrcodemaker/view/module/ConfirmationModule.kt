@@ -83,6 +83,7 @@ data class ActionType(
 )
 
 object Confirmation {
+
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun Module(
@@ -103,7 +104,8 @@ object Confirmation {
         if (show)
             ModalBottomSheet(
                 sheetState = sheetState,
-                onDismissRequest = { onDismiss() }) {
+                onDismissRequest = { onDismiss() },
+            ) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     val textModifier = Modifier
                         .fillMaxWidth()
