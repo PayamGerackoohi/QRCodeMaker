@@ -19,34 +19,6 @@ It makes QR-Code images based on casual user contents, targeted for cell-phone u
 ### Jacoco Report
 ![word detail](docs/test-results/jacoco.webp)
 
-# Screenshots
-The screenshots are automatically captured, resized and compressed from the instrumented testes.
-
-## Home
-![word detail](docs/screenshots/Home.webp)
-
-## Content Type
-![word detail](docs/screenshots/ContentType.webp)
-
-## Content Form
-### Insert Mode
-![word detail](docs/screenshots/ContentForm_InsertMode_Text.webp)
-![word detail](docs/screenshots/ContentForm_InsertMode_PhoneCall.webp)
-![word detail](docs/screenshots/ContentForm_InsertMode_MeCard.webp)
-
-### Edit Mode
-![word detail](docs/screenshots/ContentForm_EditMode.webp)
-
-## Show QR-Code
-### Portrait
-![word detail](docs/screenshots/ShowQrCode_Portrait.webp)
-![word detail](docs/screenshots/ShowQrCode_Toolbox.webp)
-![word detail](docs/screenshots/ShowQrCode_Portrait_Fullscreen.webp)
-
-### Landscape
-![word detail](docs/screenshots/ShowQrCode_Landscape.webp)
-![word detail](docs/screenshots/ShowQrCode_Landscape_Fullscreen.webp)
-
 # Scripts
 Some Unix scripts to make the external source management and screenshot capturing automatic.
 Run the scripts from the project root directory.
@@ -77,6 +49,35 @@ The results are stored in the `./docs/screenshots` directory.
 
 ❌ Don't put anything inside the `./docs/screenshots` folder. It would be cleaned-up everytime you call the `take-screenshots.sh` script.
 
+# Screenshots
+The screenshots are automatically captured, resized and compressed from the instrumented testes.
+
+## Home
+![word detail](docs/screenshots/Home.webp)
+
+## Content Type
+![word detail](docs/screenshots/ContentType.webp)
+
+## Content Form
+### Insert Mode
+![word detail](docs/screenshots/ContentForm_InsertMode_Text.webp)
+![word detail](docs/screenshots/ContentForm_InsertMode_PhoneCall.webp)
+![word detail](docs/screenshots/ContentForm_InsertMode_MeCard.webp)
+
+### Edit Mode
+![word detail](docs/screenshots/ContentForm_EditMode.webp)
+
+## Show QR-Code
+### Portrait
+![word detail](docs/screenshots/ShowQrCode_Portrait.webp)
+![word detail](docs/screenshots/ShowQrCode_Portrait_Fullscreen.webp)
+![word detail](docs/screenshots/ShowQrCode_Toolbox.webp)
+![word detail](docs/screenshots/ShowQrCode_Toolbox_RemoveContent.webp)
+
+### Landscape
+![word detail](docs/screenshots/ShowQrCode_Landscape.webp)
+![word detail](docs/screenshots/ShowQrCode_Landscape_Fullscreen.webp)
+
 # TODO
-- Placing image inside the QR-Code
-- More content types
+- [ ] Placing image inside the QR-Code
+- [ ] More content types

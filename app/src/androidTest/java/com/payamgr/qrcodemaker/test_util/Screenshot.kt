@@ -15,6 +15,7 @@ enum class Screenshot {
     ShowQrCode_Landscape,
     ShowQrCode_Landscape_Fullscreen,
     ShowQrCode_Toolbox,
+    ShowQrCode_Toolbox_RemoveContent,
 }
 
 fun Screenshot.take(

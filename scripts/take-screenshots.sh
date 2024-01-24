@@ -4,11 +4,11 @@
 set -e
 
 # Validate the 'adb'
-adb=`cat env | grep adb | cut -d = -f 2`
+adb=`cat scripts/env | grep adb | cut -d = -f 2`
 ${adb} --version | grep "Android Debug Bridge version" > /dev/null || (echo "Invalid adb" && exit 1)
 
 # Validate the 'JAVA_HOME'
-JAVA_HOME=`cat env | grep JAVA_HOME | cut -d = -f 2`
+JAVA_HOME=`cat scripts/env | grep JAVA_HOME | cut -d = -f 2`
 pushd "${JAVA_HOME}/bin" > /dev/null
 ls | grep jar > /dev/null || (echo "Invalid JAVA_HOME: jar not found" && exit 1)
 ls | grep java > /dev/null || (echo "Invalid JAVA_HOME: java not found" && exit 1)

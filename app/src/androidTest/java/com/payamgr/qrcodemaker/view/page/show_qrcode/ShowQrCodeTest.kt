@@ -400,10 +400,14 @@ class ShowQrCodeTest {
         // -- Click on the remove button
         rule.onNodeWithContentDescription("Remove Content").performClick()
 
+        Screenshot.ShowQrCode_Toolbox_RemoveContent.take()
+
         // -- Verify the remove content bottom is displayed
         rule.onNodeWithTag("Confirmation.Module").assertIsDisplayed()
         rule.onNodeWithText("Remove Content").assertIsDisplayed()
         rule.onNodeWithText("Are you sure you want to remove \"Title\"?").assertIsDisplayed()
+
+        Screenshot.ShowQrCode_Toolbox_RemoveContent.take()
 
         confirmVerified()
     }
