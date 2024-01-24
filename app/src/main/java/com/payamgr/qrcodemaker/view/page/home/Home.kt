@@ -25,6 +25,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -37,7 +38,7 @@ import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.payamgr.qrcodemaker.data.database.entity.TextContent
 import com.payamgr.qrcodemaker.data.model.Content
-import com.payamgr.qrcodemaker.data.model.event.HomeEvent
+import com.payamgr.qrcodemaker.data.model.event.HomeEffect
 import com.payamgr.qrcodemaker.data.model.state.HomeState
 import com.payamgr.qrcodemaker.view.theme.QRCodeMakerTheme
 import kotlinx.coroutines.flow.Flow
@@ -55,7 +56,7 @@ fun HomePage_Preview() {
                 navigateToContentType = {},
                 navigateToShowQrCode = {},
                 viewModel = object : HomeVM(state) {
-                    override val eventFlow: Flow<HomeEvent> get() = flowOf()
+                    override val effect: Flow<HomeEffect> get() = flowOf()
                     override fun showQrCode(content: Content) {}
                     override fun showContentTypePage() {}
                 })
@@ -66,9 +67,13 @@ fun HomePage_Preview() {
 object Home {
     const val Route = "home"
 
-    fun NavGraphBuilder.homePage(navigateToContentType: () -> Unit, navigateToShowQrCode: (Content) -> Unit) {
+    fun NavGraphBuilder.homePage(
+        viewModelBuilder: @Composable () -> HomeVM,
+        navigateToContentType: () -> Unit,
+        navigateToShowQrCode: (Content) -> Unit,
+    ) {
         composable(Route) {
-            Page(navigateToContentType, navigateToShowQrCode)
+            Page(navigateToContentType, navigateToShowQrCode, viewModelBuilder())
         }
     }
 
@@ -78,7 +83,7 @@ object Home {
         navigateToShowQrCode: (Content) -> Unit,
         viewModel: HomeVM = mavericksViewModel(),
     ) {
-        HandleEvents(viewModel.eventFlow, navigateToShowQrCode, navigateToContentType)
+        HandleEffects(viewModel.effect, navigateToShowQrCode, navigateToContentType)
         val state by viewModel.collectAsState()
         Scaffold(
             floatingActionButton = { AddContentButton(onClick = viewModel::showContentTypePage) },
@@ -86,7 +91,9 @@ object Home {
             LazyVerticalGrid(
                 columns = GridCells.Adaptive(250.dp),
                 contentPadding = PaddingValues(6.dp),
-                modifier = Modifier.padding(innerPadding)
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .testTag("Qr-Code Contents")
             ) {
                 items(state.contents) {
                     QrCodeContent(
@@ -110,16 +117,16 @@ object Home {
     }
 
     @Composable
-    fun HandleEvents(
-        event: Flow<HomeEvent>,
+    fun HandleEffects(
+        effect: Flow<HomeEffect>,
         navigateToShowQrCode: (Content) -> Unit,
         navigateToContentType: () -> Unit,
     ) {
-        LaunchedEffect(key1 = Unit) {
-            event.collectLatest {
+        LaunchedEffect(effect) {
+            effect.collectLatest {
                 when (it) {
-                    is HomeEvent.NavigateToShowQrCode -> navigateToShowQrCode(it.content)
-                    HomeEvent.NavigateToContentType -> navigateToContentType()
+                    is HomeEffect.NavigateToShowQrCode -> navigateToShowQrCode(it.content)
+                    HomeEffect.NavigateToContentType -> navigateToContentType()
                 }
             }
         }
@@ -132,7 +139,9 @@ object Home {
             colors = CardDefaults.cardColors(contentColor = MaterialTheme.colorScheme.secondaryContainer),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
             onClick = onClick,
-            modifier = modifier.fillMaxWidth(),
+            modifier = modifier
+                .fillMaxWidth()
+                .testTag("Home.QrCodeContent"),
         ) {
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(

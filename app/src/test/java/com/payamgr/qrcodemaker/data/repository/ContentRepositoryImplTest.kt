@@ -1,5 +1,6 @@
 package com.payamgr.qrcodemaker.data.repository
 
+import androidx.test.filters.SmallTest
 import com.payamgr.qrcodemaker.R
 import com.payamgr.qrcodemaker.data.database.QrDatabase
 import com.payamgr.qrcodemaker.test_util.DbHelperCastExtensions.asDbHelper
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import kotlin.IllegalArgumentException
 
+@SmallTest
 @OptIn(ExperimentalCoroutinesApi::class)
 class ContentRepositoryImplTest {
     private val utd = UnconfinedTestDispatcher()

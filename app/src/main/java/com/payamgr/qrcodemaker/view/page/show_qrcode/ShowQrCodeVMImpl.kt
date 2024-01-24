@@ -23,24 +23,12 @@ class ShowQrCodeVMImpl @AssistedInject constructor(
     @AssistedFactory
     interface Factory : AssistedViewModelFactory<ShowQrCodeVMImpl, ShowQrCodeState>
 
-    private val event = Channel<ShowQrCodeEvent>()
-    override val eventFlow = event.receiveAsFlow()
+    private val _effect = Channel<ShowQrCodeEvent>()
+    override val effect = _effect.receiveAsFlow()
 
     init {
         observeCurrentContent()
         observeEcc()
-    }
-
-    private fun observeEcc() {
-        onEach(ShowQrCodeState::ecc, ShowQrCodeState::currentContent) { ecc, content ->
-            delay(100)
-            content?.let {
-                viewModelScope.launch {
-                    val qrCode = qrCodeMaker.encode(content, ecc)
-                    setState { copy(qrCode = qrCode, ecc = ecc) }
-                }
-            }
-        }
     }
 
     private fun observeCurrentContent() = viewModelScope.launch {
@@ -57,16 +45,28 @@ class ShowQrCodeVMImpl @AssistedInject constructor(
         }
     }
 
+    private fun observeEcc() {
+        onEach(ShowQrCodeState::ecc, ShowQrCodeState::currentContent) { ecc, content ->
+            delay(100)
+            content?.let {
+                viewModelScope.launch {
+                    val qrCode = qrCodeMaker.encode(content, ecc)
+                    setState { copy(qrCode = qrCode, ecc = ecc) }
+                }
+            }
+        }
+    }
+
     override fun removeContent() = viewModelScope.launch {
         repository.removeCurrentContent()
-        event.send(ShowQrCodeEvent.ClosePage)
+        _effect.send(ShowQrCodeEvent.ClosePage)
     }
 
     override fun editContent() = withState {
         it.currentContent?.let { content ->
             viewModelScope.launch {
                 repository.push(content.qrCodeType)
-                event.send(ShowQrCodeEvent.NavigateToContentForm)
+                _effect.send(ShowQrCodeEvent.NavigateToContentForm)
             }
         }
     }

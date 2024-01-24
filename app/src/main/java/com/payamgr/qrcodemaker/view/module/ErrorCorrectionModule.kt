@@ -21,6 +21,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -36,7 +37,7 @@ fun ErrorCorrectionModule_Preview() {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
             Column {
                 var level by remember { mutableStateOf(Medium) }
-                ErrorCorrectionModule(
+                ErrorCorrection.Module(
                     eccAction = ReactiveAction(
                         data = level,
                         onDataChanged = { level = it },
@@ -49,49 +50,53 @@ fun ErrorCorrectionModule_Preview() {
 
 private val levels = ErrorCorrectionCodeLevel.values()
 
-@Composable
-fun ErrorCorrectionModule(eccAction: ReactiveAction<ErrorCorrectionCodeLevel>) {
-    Row(
-        horizontalArrangement = Arrangement.SpaceEvenly,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        levels.forEach { level ->
-            Item(
-                label = level.name,
-                isSelected = level == eccAction.data,
-                shape = when (level) {
-                    Low -> RoundedCornerShape(bottomStart = 16.dp, topStart = 16.dp)
-                    Medium -> RectangleShape
-                    High -> RoundedCornerShape(bottomEnd = 16.dp, topEnd = 16.dp)
-                },
-                onClick = { eccAction.onDataChanged(level) },
-            )
+object ErrorCorrection {
+    @Composable
+    fun Module(eccAction: ReactiveAction<ErrorCorrectionCodeLevel>) {
+        Row(
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            modifier = Modifier
+                .fillMaxWidth()
+                .testTag("ErrorCorrection.Module")
+        ) {
+            levels.forEach { level ->
+                Item(
+                    label = level.name,
+                    isSelected = level == eccAction.data,
+                    shape = when (level) {
+                        Low -> RoundedCornerShape(bottomStart = 16.dp, topStart = 16.dp)
+                        Medium -> RectangleShape
+                        High -> RoundedCornerShape(bottomEnd = 16.dp, topEnd = 16.dp)
+                    },
+                    onClick = { eccAction.onDataChanged(level) },
+                )
+            }
         }
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun RowScope.Item(
-    label: String,
-    isSelected: Boolean,
-    shape: Shape,
-    onClick: () -> Unit,
-) {
-    ElevatedFilterChip(
-        selected = isSelected,
-        onClick = onClick,
-        label = {
-            Text(
-                text = label,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.weight(1f)
-            )
-        },
-        shape = shape,
-        colors = FilterChipDefaults.elevatedFilterChipColors(
-            selectedContainerColor = MaterialTheme.colorScheme.errorContainer
-        ),
-        modifier = Modifier.weight(1f)
-    )
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun RowScope.Item(
+        label: String,
+        isSelected: Boolean,
+        shape: Shape = RectangleShape,
+        onClick: () -> Unit,
+    ) {
+        ElevatedFilterChip(
+            selected = isSelected,
+            onClick = onClick,
+            label = {
+                Text(
+                    text = label,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.weight(1f)
+                )
+            },
+            shape = shape,
+            colors = FilterChipDefaults.elevatedFilterChipColors(
+                selectedContainerColor = MaterialTheme.colorScheme.errorContainer
+            ),
+            modifier = Modifier.weight(1f)
+        )
+    }
 }

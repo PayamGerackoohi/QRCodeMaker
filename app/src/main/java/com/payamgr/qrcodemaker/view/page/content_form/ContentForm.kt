@@ -31,7 +31,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -53,7 +56,8 @@ import com.payamgr.qrcodemaker.data.model.Input
 import com.payamgr.qrcodemaker.data.model.InputData
 import com.payamgr.qrcodemaker.data.model.InputId
 import com.payamgr.qrcodemaker.data.model.QrCodeType
-import com.payamgr.qrcodemaker.data.model.event.ContentFormEvent
+import com.payamgr.qrcodemaker.data.model.action.ReactiveAction
+import com.payamgr.qrcodemaker.data.model.event.ContentFormEffect
 import com.payamgr.qrcodemaker.data.util.isValid
 import com.payamgr.qrcodemaker.view.module.InputModule
 import com.payamgr.qrcodemaker.view.theme.QRCodeMakerTheme
@@ -75,12 +79,22 @@ fun ContentFormPage_Preview() {
 object ContentForm {
     private const val Route = "content-form"
     private const val editModeArg = "is-edit-mode"
+    const val RouteWithArgs = "$Route/{$editModeArg}"
 
-    fun NavGraphBuilder.contentFormPage(onClose: (isEditMode: Boolean) -> Unit) {
+    fun NavGraphBuilder.contentFormPage(
+        viewModelBuilder: @Composable () -> ContentFormVM,
+        onClose: (isEditMode: Boolean) -> Unit,
+    ) {
         composable(
-            route = "$Route/{$editModeArg}",
+            route = RouteWithArgs,
             arguments = listOf(navArgument(editModeArg) { type = NavType.BoolType }),
-        ) { Page(onClose = onClose, isEditMode = it.arguments?.getBoolean(editModeArg) == true) }
+        ) {
+            Page(
+                viewModel = viewModelBuilder(),
+                onClose = onClose,
+                isEditMode = it.arguments?.getBoolean(editModeArg) == true
+            )
+        }
     }
 
     fun NavHostController.navigateToContentForm(isEditMode: Boolean) = navigate("$Route/$isEditMode") {
@@ -93,7 +107,7 @@ object ContentForm {
         onClose: (isEditMode: Boolean) -> Unit,
         isEditMode: Boolean = false,
     ) {
-        HandleEvents(viewModel.eventFlow, onClose = { onClose(isEditMode) })
+        HandleEffects(viewModel.effect, onClose = { onClose(isEditMode) })
         val state by viewModel.collectAsState()
         state.currentQrCodeType?.let { qrCodeType ->
             val snackbarState = remember { SnackbarHostState() }
@@ -104,22 +118,22 @@ object ContentForm {
                 snackbarHost = { SnackbarHost(hostState = snackbarState) }
             ) { paddingValues ->
                 PageContent(
-                    paddingValues = paddingValues,
                     qrCodeType = qrCodeType,
-                    contentTitle = if (isEditMode) state.contentTitle else "",
+                    title = if (isEditMode) state.contentTitle else "",
                     add = { if (isEditMode) viewModel.update(it) else viewModel.add(it) },
-                    showSnackbar = showSnackbar
+                    showSnackbar = showSnackbar,
+                    modifier = Modifier.padding(paddingValues),
                 )
             }
         } ?: Text(text = "No currentQrCodeType!")
     }
 
     @Composable
-    fun HandleEvents(event: Flow<ContentFormEvent>, onClose: () -> Unit) {
-        LaunchedEffect(key1 = Unit) {
-            event.collectLatest {
+    fun HandleEffects(effect: Flow<ContentFormEffect>, onClose: () -> Unit) {
+        LaunchedEffect(effect) {
+            effect.collectLatest {
                 when (it) {
-                    ContentFormEvent.ClosePage -> onClose()
+                    ContentFormEffect.ClosePage -> onClose()
                 }
             }
         }
@@ -127,11 +141,11 @@ object ContentForm {
 
     @Composable
     fun PageContent(
-        paddingValues: PaddingValues,
         qrCodeType: QrCodeType,
-        contentTitle: String,
+        title: String,
         add: (Content) -> Unit,
         showSnackbar: (String) -> Unit,
+        modifier: Modifier = Modifier,
     ) {
         val inputMap = remember { mutableMapOf<InputId, InputData>() }
         val addInput: (InputId, InputData) -> Unit = { id, data -> inputMap[id] = data }
@@ -140,12 +154,12 @@ object ContentForm {
             contentPadding = PaddingValues(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .testTag("ContentForm.PageContent")
         ) {
             item { Description(qrCodeType.descriptionId) }
-            item { Title(showValidation, contentTitle, addInput) }
+            item { Title(showValidation, title, addInput) }
             items(qrCodeType.inputs) { input -> InputItem(input, addInput, showValidation) }
             item {
                 ConfirmButton(
@@ -172,21 +186,26 @@ object ContentForm {
             },
             colors = TopAppBarDefaults.topAppBarColors(
                 containerColor = MaterialTheme.colorScheme.primaryContainer
-            )
+            ),
+            modifier = Modifier.testTag("ContentForm.PageAppBar")
         )
     }
 
     @Composable
     fun Description(@StringRes descriptionId: Int) {
-        Text(text = stringResource(descriptionId))
+        Text(
+            text = stringResource(descriptionId),
+            modifier = Modifier.semantics { contentDescription = "Description" },
+        )
     }
 
     @Composable
-    fun Title(showValidation: Boolean, contentTitle: String, addInput: (InputId, InputData) -> Unit) {
+    fun Title(showValidation: Boolean, title: String, addInput: (InputId, InputData) -> Unit) {
         SingleItem(
-            input = Input.Single(InputId.Title, R.string.title, contentTitle, KeyboardType.Text),
+            input = Input.Single(InputId.Title, R.string.title, title, KeyboardType.Text),
             showValidation = showValidation,
             addInput = addInput,
+            modifier = Modifier.testTag("ContentForm.Title"),
         )
     }
 
@@ -207,30 +226,37 @@ object ContentForm {
         input: Input.Single,
         showValidation: Boolean,
         addInput: (InputId, InputData) -> Unit,
+        modifier: Modifier = Modifier,
     ) {
-        var text by remember(input.initialValue) { mutableStateOf(input.initialValue) }
+        val initialValue = input.initialValue
+        var text by remember(initialValue) { mutableStateOf(initialValue) }
         val data = remember(text) {
             InputData(text, input.isOptional).apply {
                 addInput(input.id, this)
             }
         }
         InputModule.TextType(
-            value = text,
-            onValueChange = { text = it },
+            valueAction = ReactiveAction(
+                data = text,
+                onDataChanged = { text = it }
+            ),
             label = stringResource(id = input.labelId),
             keyboardType = input.keyboardType,
             isMandatory = !input.isOptional,
             singleLine = input.singleLine,
             isError = showValidation && !data.isValid,
-            modifier = Modifier.fillMaxWidth(),
+            modifier = modifier
+                .fillMaxWidth()
+                .testTag("ContentForm.SingleItem"),
         )
     }
 
     @Composable
     fun GroupItem(group: Input.Group, showValidation: Boolean, addInput: (InputId, InputData) -> Unit) {
-        Card {
+        val title = stringResource(group.titleId)
+        Card(modifier = Modifier.testTag("ContentForm.GroupItem($title)")) {
             Text(
-                text = stringResource(group.titleId),
+                text = title,
                 color = MaterialTheme.colorScheme.onSecondary,
                 style = MaterialTheme.typography.titleMedium,
                 textAlign = TextAlign.Center,
@@ -238,6 +264,7 @@ object ContentForm {
                     .fillMaxWidth()
                     .background(color = MaterialTheme.colorScheme.secondary)
                     .padding(16.dp)
+                    .testTag("GroupItem.Title")
             )
             Column {
                 group.inputs.forEach { input ->
@@ -260,18 +287,21 @@ object ContentForm {
         addContent: (Content) -> Unit,
         showSnackbar: (String) -> Unit,
     ) {
-        Button(onClick = {
-            onShowValidationChanged(true)
-            if (areInputsValid()) {
-                val content: Content = when (qrCodeType) {
-                    is QrCodeType.Text -> TextContent.digest(inputMap)
-                    is QrCodeType.PhoneCall -> PhoneCallContent.digest(inputMap)
-                    is QrCodeType.MeCard -> MeCardContent.digest(inputMap)
-                }
-                addContent(content)
-            } else
-                showSnackbar("Invalid Input")
-        }) {
+        Button(
+            onClick = {
+                onShowValidationChanged(true)
+                if (areInputsValid()) {
+                    val content: Content = when (qrCodeType) {
+                        is QrCodeType.Text -> TextContent.digest(inputMap)
+                        is QrCodeType.PhoneCall -> PhoneCallContent.digest(inputMap)
+                        is QrCodeType.MeCard -> MeCardContent.digest(inputMap)
+                    }
+                    addContent(content)
+                } else
+                    showSnackbar("Invalid Input")
+            },
+            modifier = Modifier.testTag("ContentForm.ConfirmButton"),
+        ) {
             Text(text = "Confirm")
         }
     }

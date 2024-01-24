@@ -1,5 +1,6 @@
 package com.payamgr.qrcodemaker.data.database.entity
 
+import androidx.test.filters.SmallTest
 import com.payamgr.qrcodemaker.data.model.InputData
 import com.payamgr.qrcodemaker.data.model.InputId
 import com.payamgr.qrcodemaker.data.util.string
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
+@SmallTest
 class TextContentTest {
     private lateinit var content: TextContent
 

@@ -39,7 +39,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -50,6 +49,9 @@ import androidx.compose.ui.graphics.drawscope.inset
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -64,13 +66,14 @@ import com.payamgr.qrcodemaker.data.database.entity.TextContent
 import com.payamgr.qrcodemaker.data.model.ErrorCorrectionCodeLevel
 import com.payamgr.qrcodemaker.data.model.QrCode
 import com.payamgr.qrcodemaker.data.model.action.ReactiveAction
-import com.payamgr.qrcodemaker.data.model.action.onDataToggled
+import com.payamgr.qrcodemaker.data.model.action.toggle
 import com.payamgr.qrcodemaker.data.model.event.ShowQrCodeEvent
 import com.payamgr.qrcodemaker.data.model.state.ShowQrCodeState
 import com.payamgr.qrcodemaker.view.module.ActionType
 import com.payamgr.qrcodemaker.view.module.Confirmation
-import com.payamgr.qrcodemaker.view.module.ErrorCorrectionModule
+import com.payamgr.qrcodemaker.view.module.ErrorCorrection
 import com.payamgr.qrcodemaker.view.theme.QRCodeMakerTheme
+import com.payamgr.qrcodemaker.view.util.actionOf
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flow
@@ -84,7 +87,7 @@ fun ShowQrCodePage_Preview() {
             val state = ShowQrCodeState(TextContent("Title", "\nText".repeat(10)))
             ShowQrCode.Page(
                 viewModel = object : ShowQrCodeVM(state) {
-                    override val eventFlow = flow<ShowQrCodeEvent> {}
+                    override val effect = flow<ShowQrCodeEvent> {}
                     override fun removeContent() {}
                     override fun editContent() {}
                     override fun onEccChanged(ecc: ErrorCorrectionCodeLevel) {}
@@ -97,13 +100,17 @@ fun ShowQrCodePage_Preview() {
 }
 
 object ShowQrCode {
-    private const val Route = "show-qrcode"
+    const val Route = "show-qrcode"
 
-    fun NavGraphBuilder.showQrCodePage(onClose: () -> Unit, navigateToContentForm: (isEditMode: Boolean) -> Unit) {
+    fun NavGraphBuilder.showQrCodePage(
+        viewModelBuilder: @Composable () -> ShowQrCodeVM,
+        onClose: () -> Unit, navigateToContentForm: () -> Unit,
+    ) {
         composable(Route) {
             Page(
+                viewModel = viewModelBuilder(),
                 onClose = onClose,
-                navigateToContentForm = { navigateToContentForm(true) },
+                navigateToContentForm = { navigateToContentForm() },
             )
         }
     }
@@ -116,24 +123,22 @@ object ShowQrCode {
         onClose: () -> Unit,
         navigateToContentForm: () -> Unit,
     ) {
-        HandleEvents(viewModel.eventFlow, onClose, navigateToContentForm)
+        HandleEffects(viewModel.effect, onClose, navigateToContentForm)
         val state by viewModel.collectAsState()
-        var showConfirmation by remember { mutableStateOf(false) }
-        var isFullScreen by remember { mutableStateOf(false) }
-        val fullScreenLabel = if (isFullScreen) "Full-Screen QR-Code" else "Shrink QR-Code"
-        val fullScreenAction = ReactiveAction(
-            data = isFullScreen,
-            onDataChanged = { isFullScreen = it }
-        )
+        val showConfirmation = remember { mutableStateOf(false) }
+        val isFullScreen = remember { mutableStateOf(false) }
+        val fullScreenLabel = if (isFullScreen.value) "Full-Screen QR-Code" else "Shrink QR-Code"
+        val fullScreenAction = actionOf(isFullScreen)
         state.currentContent?.let { content ->
             Scaffold(
                 topBar = { PageAppBar(title = content.title) },
                 floatingActionButton = {
                     Toolbox(
-                        onRemove = { showConfirmation = true },
+                        onRemove = { showConfirmation.value = true },
                         onEdit = viewModel::editContent,
                     )
-                }
+                },
+                modifier = Modifier.testTag("ShowQrCode.Scaffold")
             ) { innerPaddings ->
                 BoxWithConstraints(modifier = Modifier.padding(innerPaddings)) {
                     PageContent(
@@ -148,69 +153,42 @@ object ShowQrCode {
                     )
                 }
                 RemoveConfirmationBottomSheet(
-                    show = showConfirmation,
-                    onDismiss = { showConfirmation = false },
+                    showAction = actionOf(showConfirmation),
                     title = content.title,
                     removeContent = viewModel::removeContent,
                 )
             }
-            AnimatedVisibility(
-                visible = isFullScreen,
-                enter = fadeIn(),
-                exit = fadeOut(),
-            ) {
-                FullScreenQrCode(
-                    qrCode = state.qrCode,
-                    clickLabel = fullScreenLabel,
-                    fullScreenAction = fullScreenAction,
-                )
-            }
+            FullScreenQrCode(
+                qrCode = state.qrCode,
+                clickLabel = fullScreenLabel,
+                fullScreenAction = fullScreenAction,
+            )
         } ?: Text(text = "Invalid Content!")
     }
 
     @Composable
     fun FullScreenQrCode(qrCode: QrCode, clickLabel: String, fullScreenAction: ReactiveAction<Boolean>) {
-        Surface(
-            color = Color.Black.copy(alpha = .8f),
-            modifier = Modifier
-                .fillMaxSize()
-                .clickable(
-                    onClickLabel = clickLabel,
-                    indication = null,
-                    interactionSource = MutableInteractionSource(),
-                    onClick = { fullScreenAction.onDataToggled() }
-                )
+        AnimatedVisibility(
+            visible = fullScreenAction.data,
+            enter = fadeIn(),
+            exit = fadeOut(),
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                QrCodeCanvas(
-                    qrCode = qrCode,
-                    useMargin = true,
-                )
-            }
-        }
-    }
-
-    @Composable
-    fun Toolbox(onRemove: () -> Unit, onEdit: () -> Unit) {
-        var expandToolbox by remember { mutableStateOf(false) }
-        val hideToolbox = { expandToolbox = false }
-        Column {
-            ToolBoxButton(
-                onClick = { expandToolbox = expandToolbox.not() },
-                shouldExpand = expandToolbox,
-            )
-            AnimatedVisibility(visible = expandToolbox) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                    modifier = Modifier.padding(top = 8.dp)
-                ) {
-                    RemoveContentButton(
-                        onRemove = onRemove,
-                        hideToolbox = hideToolbox
+            Surface(
+                color = Color.Black.copy(alpha = .8f),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clickable(
+                        onClickLabel = clickLabel,
+                        indication = null,
+                        interactionSource = MutableInteractionSource(),
+                        onClick = { fullScreenAction.toggle() }
                     )
-                    EditContentButton(
-                        onEdit = onEdit,
-                        hideToolbox = hideToolbox,
+                    .testTag("ShowQrCode.FullScreenQrCode")
+            ) {
+                Box(contentAlignment = Alignment.Center) {
+                    QrCodeCanvas(
+                        qrCode = qrCode,
+                        useMargin = true,
                     )
                 }
             }
@@ -218,15 +196,33 @@ object ShowQrCode {
     }
 
     @Composable
-    fun EditContentButton(
-        onEdit: () -> Unit,
-        hideToolbox: () -> Unit,
-    ) {
+    fun Toolbox(onRemove: () -> Unit, onEdit: () -> Unit) {
+        val expandToolbox = remember { mutableStateOf(false) }
+        val hideToolbox = { expandToolbox.value = false }
+        Column(modifier = Modifier.testTag("ShowQrCode.Toolbox")) {
+            ToolBoxButton(expand = actionOf(expandToolbox))
+            AnimatedVisibility(visible = expandToolbox.value) {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    RemoveContentButton {
+                        onRemove()
+                        hideToolbox()
+                    }
+                    EditContentButton {
+                        onEdit()
+                        hideToolbox()
+                    }
+                }
+            }
+        }
+    }
+
+    @Composable
+    fun EditContentButton(onClick: () -> Unit) {
         FloatingActionButton(
-            onClick = {
-                onEdit()
-                hideToolbox()
-            },
+            onClick = onClick,
             shape = CircleShape,
         ) {
             Icon(
@@ -237,15 +233,9 @@ object ShowQrCode {
     }
 
     @Composable
-    fun RemoveContentButton(
-        onRemove: () -> Unit,
-        hideToolbox: () -> Unit,
-    ) {
+    fun RemoveContentButton(onClick: () -> Unit) {
         FloatingActionButton(
-            onClick = {
-                onRemove()
-                hideToolbox()
-            },
+            onClick = onClick,
             containerColor = MaterialTheme.colorScheme.errorContainer,
             contentColor = Color.White,
             shape = CircleShape,
@@ -258,21 +248,21 @@ object ShowQrCode {
     }
 
     @Composable
-    fun ToolBoxButton(shouldExpand: Boolean, onClick: () -> Unit) {
+    fun ToolBoxButton(expand: ReactiveAction<Boolean>) {
         FloatingActionButton(
-            onClick = onClick,
+            onClick = expand::toggle,
             shape = CircleShape,
         ) {
-            Crossfade(targetState = shouldExpand, label = "Toolbox Icon Cross-fade") { isExpanded ->
+            Crossfade(targetState = expand.data, label = "Toolbox Icon Cross-fade") { isExpanded ->
                 if (isExpanded)
                     Icon(
                         imageVector = Icons.Default.ArrowDownward,
-                        contentDescription = "Toggle Toolbox",
+                        contentDescription = "Collapse the Toolbox",
                     )
                 else
                     Icon(
                         imageVector = Icons.Default.Settings,
-                        contentDescription = "Toggle Toolbox",
+                        contentDescription = "Expand the Toolbox",
                     )
             }
         }
@@ -280,38 +270,35 @@ object ShowQrCode {
 
     @Composable
     fun RemoveConfirmationBottomSheet(
-        show: Boolean,
-        onDismiss: () -> Unit,
+        showAction: ReactiveAction<Boolean>,
         title: String,
         removeContent: () -> Unit,
     ) {
         Confirmation.Module(
-            show = show,
-            onDismiss = onDismiss,
+            showAction,
             title = "Remove Content",
             body = "Are you sure you want to remove \"$title\"?",
             actions = arrayOf(
                 ActionType(
-                    id = 0,
                     label = "Remove",
+                    called = removeContent,
                     colors = Confirmation.ButtonColors(
                         container = MaterialTheme.colorScheme.errorContainer,
                         text = MaterialTheme.colorScheme.onErrorContainer,
                     )
                 )
             ),
-            onAction = { result -> if (result == 0) removeContent() },
         )
     }
 
     @Composable
-    fun HandleEvents(
-        event: Flow<ShowQrCodeEvent>,
+    fun HandleEffects(
+        effect: Flow<ShowQrCodeEvent>,
         onClose: () -> Unit,
         navigateToContentForm: () -> Unit,
     ) {
-        LaunchedEffect(key1 = Unit) {
-            event.collectLatest {
+        LaunchedEffect(effect) {
+            effect.collectLatest {
                 when (it) {
                     ShowQrCodeEvent.ClosePage -> onClose()
                     ShowQrCodeEvent.NavigateToContentForm -> navigateToContentForm()
@@ -330,13 +317,13 @@ object ShowQrCode {
     ) {
         if (isPortrait) PortraitContent(
             qrCode = qrCode,
-            text = text,
+            qrCodeText = text,
             eccAction = eccAction,
             fullScreenAction = fullScreenAction,
         )
         else LandscapeContent(
             qrCode = qrCode,
-            text = text,
+            qrCodeText = text,
             eccAction = eccAction,
             fullScreenAction = fullScreenAction,
         )
@@ -345,13 +332,14 @@ object ShowQrCode {
     @Composable
     fun PortraitContent(
         qrCode: QrCode,
-        text: String,
+        qrCodeText: String,
         eccAction: ReactiveAction<ErrorCorrectionCodeLevel>,
         fullScreenAction: ReactiveAction<Boolean>,
     ) {
         LazyColumn(
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = Modifier.testTag("ShowQrCode.PortraitContent")
         ) {
             item {
                 QrCodeCanvas(
@@ -363,14 +351,19 @@ object ShowQrCode {
             }
             item {
                 ErrorCorrectionLabel()
-                ErrorCorrectionModule(eccAction = eccAction)
+                ErrorCorrection.Module(eccAction = eccAction)
             }
-            item { Text(text = text) }
+            item {
+                Text(
+                    text = qrCodeText,
+                    modifier = Modifier.testTag("QR-Code.Text")
+                )
+            }
         }
     }
 
     private fun Modifier.onQrCodeExpandClick(fullScreenAction: ReactiveAction<Boolean>) =
-        clickable(onClickLabel = "Full-Screen QR-Code") { fullScreenAction.onDataToggled() }
+        clickable(onClickLabel = "Full-Screen QR-Code") { fullScreenAction.toggle() }
 
     @Composable
     fun ErrorCorrectionLabel() {
@@ -385,13 +378,15 @@ object ShowQrCode {
     @Composable
     fun LandscapeContent(
         qrCode: QrCode,
-        text: String,
+        qrCodeText: String,
         eccAction: ReactiveAction<ErrorCorrectionCodeLevel>,
         fullScreenAction: ReactiveAction<Boolean>,
     ) {
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            modifier = Modifier.padding(horizontal = 16.dp),
+            modifier = Modifier
+                .padding(horizontal = 16.dp)
+                .testTag("ShowQrCode.LandscapeContent"),
         ) {
             QrCodeCanvas(
                 qrCode = qrCode,
@@ -407,9 +402,14 @@ object ShowQrCode {
             ) {
                 item {
                     ErrorCorrectionLabel()
-                    ErrorCorrectionModule(eccAction = eccAction)
+                    ErrorCorrection.Module(eccAction = eccAction)
                 }
-                item { Text(text = text) }
+                item {
+                    Text(
+                        text = qrCodeText,
+                        modifier = Modifier.testTag("QR-Code.Text")
+                    )
+                }
             }
         }
     }
@@ -427,6 +427,7 @@ object ShowQrCode {
                 )
             },
             colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
+            modifier = Modifier.testTag("ShowQrCode.PageAppBar")
         )
     }
 
@@ -435,7 +436,9 @@ object ShowQrCode {
         val onBackgroundColor = MaterialTheme.colorScheme.onBackground
         val margin = if (useMargin) LocalDensity.current.run { 16.dp.toPx() } else 0f
         Canvas(
-            modifier = modifier.aspectRatio(1f),
+            modifier = modifier
+                .aspectRatio(1f)
+                .semantics { contentDescription = "QR-Code" },
             onDraw = {
                 drawRect(color = Color.Black)
                 if (useMargin) {

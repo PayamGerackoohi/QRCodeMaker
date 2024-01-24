@@ -2,7 +2,7 @@ package com.payamgr.qrcodemaker.view.page.home
 
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.payamgr.qrcodemaker.data.model.Content
-import com.payamgr.qrcodemaker.data.model.event.HomeEvent
+import com.payamgr.qrcodemaker.data.model.event.HomeEffect
 import com.payamgr.qrcodemaker.data.model.state.HomeState
 import com.payamgr.qrcodemaker.data.repository.ContentRepository
 import dagger.assisted.Assisted
@@ -20,8 +20,8 @@ class HomeVMImpl @AssistedInject constructor(
     @AssistedFactory
     interface Factory : AssistedViewModelFactory<HomeVMImpl, HomeState>
 
-    private val event = Channel<HomeEvent>()
-    override val eventFlow = event.receiveAsFlow()
+    private val _effect = Channel<HomeEffect>()
+    override val effect = _effect.receiveAsFlow()
 
     init {
         observeContents()
@@ -35,10 +35,10 @@ class HomeVMImpl @AssistedInject constructor(
 
     override fun showQrCode(content: Content) = viewModelScope.launch {
         repository.push(content)
-        event.send(HomeEvent.NavigateToShowQrCode(content))
+        _effect.send(HomeEffect.NavigateToShowQrCode(content))
     }
 
     override fun showContentTypePage() = viewModelScope.launch {
-        event.send(HomeEvent.NavigateToContentType)
+        _effect.send(HomeEffect.NavigateToContentType)
     }
 }

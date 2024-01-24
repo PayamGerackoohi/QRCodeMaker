@@ -16,7 +16,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraphBuilder
@@ -26,7 +29,7 @@ import com.airbnb.mvrx.Mavericks
 import com.airbnb.mvrx.compose.collectAsState
 import com.airbnb.mvrx.compose.mavericksViewModel
 import com.payamgr.qrcodemaker.data.model.QrCodeType
-import com.payamgr.qrcodemaker.data.model.event.ContentTypeEvent
+import com.payamgr.qrcodemaker.data.model.event.ContentTypeEffect
 import com.payamgr.qrcodemaker.data.model.state.ContentTypeState
 import com.payamgr.qrcodemaker.view.theme.QRCodeMakerTheme
 import kotlinx.coroutines.flow.Flow
@@ -50,7 +53,7 @@ fun ContentTypePage_Preview() {
                         )
                     )
                 ) {
-                    override val eventFlow: Flow<ContentTypeEvent> get() = flowOf()
+                    override val effect: Flow<ContentTypeEffect> get() = flowOf()
                     override fun showContentForm(type: QrCodeType) {}
                 },
             )
@@ -59,11 +62,14 @@ fun ContentTypePage_Preview() {
 }
 
 object ContentType {
-    private const val Route = "content-type"
+    const val Route = "content-type"
 
-    fun NavGraphBuilder.contentTypePage(navigateToContentForm: (isEditMode: Boolean) -> Unit) {
+    fun NavGraphBuilder.contentTypePage(
+        viewModelBuilder: @Composable () -> ContentTypeVM,
+        navigateToContentForm: () -> Unit,
+    ) {
         composable(Route) {
-            Page(navigateToContentForm = { navigateToContentForm(false) })
+            Page(navigateToContentForm = { navigateToContentForm() }, viewModel = viewModelBuilder())
         }
     }
 
@@ -71,11 +77,12 @@ object ContentType {
 
     @Composable
     fun Page(viewModel: ContentTypeVM = mavericksViewModel(), navigateToContentForm: () -> Unit) {
+        HandleEffects(viewModel.effect, navigateToContentForm)
         val state by viewModel.collectAsState()
-        HandleEvents(viewModel.eventFlow, navigateToContentForm)
         LazyVerticalGrid(
             columns = GridCells.Adaptive(250.dp),
             contentPadding = PaddingValues(8.dp),
+            modifier = Modifier.testTag("QR-Code Types")
         ) {
             items(state.qrCodeTypes) {
                 QrCodeTypeItem(
@@ -96,18 +103,18 @@ object ContentType {
         Button(
             onClick = { onItemClicked() },
             contentPadding = PaddingValues(24.dp),
-            modifier = modifier,
+            modifier = modifier.semantics { contentDescription = "Qr-Code Type Item" },
         ) {
             Text(text = stringResource(titleId))
         }
     }
 
     @Composable
-    fun HandleEvents(event: Flow<ContentTypeEvent>, navigateToContentForm: () -> Unit) {
-        LaunchedEffect(key1 = Unit) {
-            event.collectLatest {
+    fun HandleEffects(effect: Flow<ContentTypeEffect>, navigateToContentForm: () -> Unit) {
+        LaunchedEffect(effect) {
+            effect.collectLatest {
                 when (it) {
-                    is ContentTypeEvent.NavigateToContentForm -> navigateToContentForm()
+                    is ContentTypeEffect.NavigateToContentForm -> navigateToContentForm()
                 }
             }
         }

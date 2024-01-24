@@ -5,22 +5,22 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.payamgr.qrcodemaker.R
 
 sealed class QrCodeType(@StringRes val titleId: Int, @StringRes val descriptionId: Int, val inputs: List<Input>) {
-    class Text(text: String = "") : QrCodeType(
+    data class Text(val text: String = "") : QrCodeType(
         R.string.text,
         R.string.qrcode_type_description_text,
         listOf(Input.Single(InputId.Text, R.string.text, text, KeyboardType.Text, singleLine = false)),
     )
 
-    class PhoneCall(phone: String = "") : QrCodeType(
+    data class PhoneCall(val phone: String = "") : QrCodeType(
         R.string.phone_call,
         R.string.qrcode_type_description_phone_call,
         listOf(Input.Single(InputId.Phone, R.string.phone, phone, KeyboardType.Phone)),
     )
 
-    class MeCard(
-        firstName: String = "",
-        lastName: String = "",
-        phone: String = "",
+    data class MeCard(
+        val firstName: String = "",
+        val lastName: String = "",
+        val phone: String = "",
     ) : QrCodeType(
         R.string.me_card,
         R.string.qrcode_type_description_me_card,
@@ -36,6 +36,3 @@ sealed class QrCodeType(@StringRes val titleId: Int, @StringRes val descriptionI
         ),
     )
 }
-// Input.Single(InputId.NamePrefix, R.string.name_prefix, KeyboardType.Text, true),
-// Input.Single(InputId.MiddleName, R.string.name_middle_name, KeyboardType.Text, true),
-// Input.Single(InputId.NamePostfix, R.string.name_postfix, KeyboardType.Text, true),

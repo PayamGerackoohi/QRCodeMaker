@@ -5,21 +5,18 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.withStyle
+import com.payamgr.qrcodemaker.data.model.action.ReactiveAction
 
 object InputModule {
     @Composable
     fun TextType(
-        value: String,
-        onValueChange: (String) -> Unit,
+        valueAction: ReactiveAction<String>,
         label: String,
         keyboardType: KeyboardType,
         isMandatory: Boolean,
@@ -28,8 +25,8 @@ object InputModule {
         singleLine: Boolean = true,
     ) {
         TextField(
-            value = value,
-            onValueChange = onValueChange,
+            value = valueAction.data,
+            onValueChange = valueAction.onDataChanged,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             label = {
                 Text(text = buildAnnotatedString {
@@ -40,7 +37,7 @@ object InputModule {
             },
             singleLine = singleLine,
             isError = isError,
-            modifier = modifier,
+            modifier = modifier.testTag("InputModule.TextType.TextField"),
         )
     }
 }

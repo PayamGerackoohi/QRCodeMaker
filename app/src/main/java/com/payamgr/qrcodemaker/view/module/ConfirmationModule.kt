@@ -27,9 +27,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.payamgr.qrcodemaker.data.model.action.ReactiveAction
+import com.payamgr.qrcodemaker.data.model.action.clear
 import com.payamgr.qrcodemaker.view.theme.QRCodeMakerTheme
 import kotlinx.coroutines.launch
 
@@ -38,59 +41,75 @@ import kotlinx.coroutines.launch
 fun ConfirmationModule_Preview() {
     QRCodeMakerTheme {
         Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+            var showConfirmation by remember { mutableStateOf(false) }
+            var status by remember { mutableStateOf("") }
             Column {
-                var showConfirmation by remember { mutableStateOf(false) }
-                var status by remember { mutableStateOf("") }
-                Column {
-                    Button(onClick = { showConfirmation = true }) {
-                        Text(text = "Show")
-                    }
-                    Text(text = status)
-                    Confirmation.Module(
-                        show = showConfirmation,
-                        onDismiss = { showConfirmation = false },
-                        title = "Title",
-                        body = "Body",
-                        actions = arrayOf(
-//                            ActionType(
-//                                0,
-//                                "OK",
-//                                Confirmation.defaultButtonColors(container = Color.Red, text = Color.White),
-//                            )
-                            ActionType(
-                                0,
-                                "Yes",
-                                Confirmation.defaultButtonColors(container = Color.Blue),
-                            ),
-                            ActionType(
-                                1,
-                                "No",
-                                Confirmation.defaultButtonColors(container = Color.Red),
-                            ),
-                        ),
-                        onAction = { status = "$it" },
-                    )
+                Button(onClick = { showConfirmation = true }) {
+                    Text(text = "Show")
                 }
+                Text(text = status)
+                Confirmation.Module(
+                    showAction = ReactiveAction(
+                        data = showConfirmation,
+                        onDataChanged = { showConfirmation = it },
+                    ),
+                    title = "Title",
+                    body = "Body",
+                    actions = arrayOf(
+                        ActionType(
+                            "Yes",
+                            called = { status = "Yes" },
+                            Confirmation.defaultButtonColors(container = Color.Blue),
+                        ),
+                        ActionType(
+                            "No",
+                            called = { status = "No" },
+                            Confirmation.defaultButtonColors(container = Color.Red),
+                        ),
+                    ),
+                )
             }
         }
     }
 }
 
 data class ActionType(
-    val id: Int,
     val label: String,
+    val called: () -> Unit,
     val colors: Confirmation.ButtonColors? = null,
 )
 
+/**
+ * Confirmation bottom sheet dialog is used for option-base user acknowledgement.
+ * @sample
+ * var showConfirmation by remember { mutableStateOf(false) }
+ * var status by remember { mutableStateOf("") }
+ * Column {
+ *     Button(onClick = { showConfirmation = true }) { Text(text = "Show") }
+ *     Text(text = status)
+ *     Confirmation.Module(
+ *         showAction = ReactiveAction(
+ *             data = showConfirmation,
+ *             onDataChanged = { showConfirmation = it },
+ *         ),
+ *         title = "Title",
+ *         body = "Body",
+ *         actions = arrayOf(
+ *             ActionType(
+ *                 "OK",
+ *                 called = { status = "OK" },
+ *                 Confirmation.defaultButtonColors(container = Color.Red, text = Color.White),
+ *             ),
+ *         ),
+ *     )
+ * }
+ */
 object Confirmation {
-
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun Module(
-        show: Boolean,
-        onDismiss: () -> Unit,
+        showAction: ReactiveAction<Boolean>,
         actions: Array<ActionType>,
-        onAction: (id: Int) -> Unit,
         title: String? = null,
         body: String? = null,
     ) {
@@ -98,13 +117,14 @@ object Confirmation {
         val scope = rememberCoroutineScope()
         val hideSheet: () -> Unit = {
             scope.launch { sheetState.hide() }.invokeOnCompletion {
-                if (!sheetState.isVisible) onDismiss()
+                if (!sheetState.isVisible) showAction.clear()
             }
         }
-        if (show)
+        if (showAction.data)
             ModalBottomSheet(
                 sheetState = sheetState,
-                onDismissRequest = { onDismiss() },
+                onDismissRequest = { showAction.clear() },
+                modifier = Modifier.testTag("Confirmation.Module")
             ) {
                 Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     val textModifier = Modifier
@@ -115,13 +135,13 @@ object Confirmation {
                             text = title,
                             style = MaterialTheme.typography.titleMedium,
                             textAlign = TextAlign.Center,
-                            modifier = textModifier
+                            modifier = textModifier.testTag("Confirmation.Module.Title")
                         )
                     if (body != null)
                         Text(
                             text = body,
                             style = MaterialTheme.typography.bodyMedium,
-                            modifier = textModifier
+                            modifier = textModifier.testTag("Confirmation.Module.Body")
                         )
                     Row(
                         horizontalArrangement = Arrangement.SpaceAround,
@@ -132,7 +152,7 @@ object Confirmation {
                                 Divider(modifier = Modifier.width(1.dp))
                             ModuleButton(
                                 onClick = {
-                                    onAction(action.id)
+                                    action.called()
                                     hideSheet()
                                 },
                                 label = action.label,
@@ -146,9 +166,9 @@ object Confirmation {
 
     @Composable
     fun RowScope.ModuleButton(
-        onClick: () -> Unit,
         label: String,
-        buttonColors: ButtonColors?,
+        onClick: () -> Unit,
+        buttonColors: ButtonColors? = null,
     ) {
         val colors = buttonColors ?: defaultButtonColors()
         Button(

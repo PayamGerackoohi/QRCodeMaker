@@ -2,7 +2,7 @@ package com.payamgr.qrcodemaker.view.page.content_form
 
 import com.airbnb.mvrx.hilt.AssistedViewModelFactory
 import com.payamgr.qrcodemaker.data.model.Content
-import com.payamgr.qrcodemaker.data.model.event.ContentFormEvent
+import com.payamgr.qrcodemaker.data.model.event.ContentFormEffect
 import com.payamgr.qrcodemaker.data.model.state.ContentFormState
 import com.payamgr.qrcodemaker.data.repository.ContentRepository
 import dagger.assisted.Assisted
@@ -20,8 +20,8 @@ class ContentFormVMImpl @AssistedInject constructor(
     @AssistedFactory
     interface Factory : AssistedViewModelFactory<ContentFormVMImpl, ContentFormState>
 
-    private val event = Channel<ContentFormEvent>()
-    override val eventFlow = event.receiveAsFlow()
+    private val _effect = Channel<ContentFormEffect>()
+    override val effect = _effect.receiveAsFlow()
 
     init {
         observeCurrentQrCodeType()
@@ -44,16 +44,12 @@ class ContentFormVMImpl @AssistedInject constructor(
 
     override fun add(content: Content) = viewModelScope.launch {
         repository.add(content)
-        event.send(ContentFormEvent.ClosePage)
+        _effect.send(ContentFormEffect.ClosePage)
     }
 
-    override fun update(content: Content) = withState {
-        it.currentContent?.id?.let { id ->
-            viewModelScope.launch {
-                content.id = id
-                repository.update(content)
-                event.send(ContentFormEvent.ClosePage)
-            }
-        }
+    override fun update(content: Content) = viewModelScope.launch {
+        withState { it.currentContent?.id?.let { id -> content.id = id } }
+        repository.update(content)
+        _effect.send(ContentFormEffect.ClosePage)
     }
 }

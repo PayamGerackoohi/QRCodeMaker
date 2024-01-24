@@ -1,8 +1,10 @@
 package com.payamgr.qrcodemaker.data.util
 
+import androidx.test.filters.SmallTest
 import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.Test
 
+@SmallTest
 class TypeUtilTest {
     @Test
     fun `qrCodeTypes test`() {

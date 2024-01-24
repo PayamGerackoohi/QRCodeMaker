@@ -11,7 +11,7 @@ import kotlinx.coroutines.flow.Flow
 abstract class ShowQrCodeVM(initialState: ShowQrCodeState) : MavericksViewModel<ShowQrCodeState>(initialState) {
     companion object : MavericksViewModelFactory<ShowQrCodeVM, ShowQrCodeState> by hiltMavericksViewModelFactory()
 
-    abstract val eventFlow: Flow<ShowQrCodeEvent>
+    abstract val effect: Flow<ShowQrCodeEvent>
     abstract fun removeContent(): Any?
     abstract fun editContent(): Any?
     abstract fun onEccChanged(ecc: ErrorCorrectionCodeLevel)

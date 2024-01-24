@@ -1,5 +1,6 @@
 package com.payamgr.qrcodemaker.data
 
+import androidx.test.filters.SmallTest
 import com.payamgr.qrcodemaker.data.model.ErrorCorrectionCodeLevel
 import com.payamgr.qrcodemaker.test_util.Fake
 import com.payamgr.qrcodemaker.test_util.NewContent
@@ -17,6 +18,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 
+@SmallTest
 @OptIn(ExperimentalCoroutinesApi::class)
 class QrCodeMakerImplTest {
     private val utd = UnconfinedTestDispatcher()

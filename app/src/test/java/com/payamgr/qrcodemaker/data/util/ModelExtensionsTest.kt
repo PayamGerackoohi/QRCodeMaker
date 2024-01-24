@@ -1,6 +1,7 @@
 package com.payamgr.qrcodemaker.data.util
 
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.test.filters.SmallTest
 import com.payamgr.qrcodemaker.data.model.Input
 import com.payamgr.qrcodemaker.data.model.InputData
 import com.payamgr.qrcodemaker.data.model.InputId
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 
+@SmallTest
 class ModelExtensionsTest {
     private val singleInput = Input.Single(InputId.Title, 1, "aaa", KeyboardType.Text)
 
