@@ -6,6 +6,38 @@ It makes QR-Code images based on casual user contents, targeted for cell-phone u
 - Phone Call
 - Me-Card
 
+# Screenshots
+The screenshots are automatically captured, resized and compressed from the instrumented testes.
+
+## Splashscreen
+![word detail](docs/screenshots/Splashscreen.webp)
+
+## Home
+![word detail](docs/screenshots/Home.webp)
+
+## Content Type
+![word detail](docs/screenshots/ContentType.webp)
+
+## Content Form
+### Insert Mode
+![word detail](docs/screenshots/ContentForm_InsertMode_Text.webp)
+![word detail](docs/screenshots/ContentForm_InsertMode_PhoneCall.webp)
+![word detail](docs/screenshots/ContentForm_InsertMode_MeCard.webp)
+
+### Edit Mode
+![word detail](docs/screenshots/ContentForm_EditMode.webp)
+
+## Show QR-Code
+### Portrait
+![word detail](docs/screenshots/ShowQrCode_Portrait.webp)
+![word detail](docs/screenshots/ShowQrCode_Portrait_Fullscreen.webp)
+![word detail](docs/screenshots/ShowQrCode_Toolbox.webp)
+![word detail](docs/screenshots/ShowQrCode_Toolbox_RemoveContent.webp)
+
+### Landscape
+![word detail](docs/screenshots/ShowQrCode_Landscape.webp)
+![word detail](docs/screenshots/ShowQrCode_Landscape_Fullscreen.webp)
+
 # Code Quality
 ## Test Results ✅
 ### Unit Tests 💯
@@ -34,7 +66,7 @@ It downloads the [QRCodeMaker-cpp](https://github.com/PayamGerackoohi/QRCodeMake
 <!-- - Edit `adb` and `JAVA_HOME` in the script to the  -->
 For the first time, set your `adb` and `JAVA_HOME` for `jdk-17` into the `env` file. Similar this on OSX:
 ```sh
-rm scripts/env
+rm -f scripts/env
 echo 'adb=/Users/payam1991gr/Library/Android/sdk/platform-tools/adb' >> scripts/env
 echo 'JAVA_HOME=/Applications/Android Studio.app/Contents/jbr/Contents/Home' >> scripts/env
 ```
@@ -48,35 +80,6 @@ From now on
 The results are stored in the `./docs/screenshots` directory.
 
 ❌ Don't put anything inside the `./docs/screenshots` folder. It would be cleaned-up everytime you call the `take-screenshots.sh` script.
-
-# Screenshots
-The screenshots are automatically captured, resized and compressed from the instrumented testes.
-
-## Home
-![word detail](docs/screenshots/Home.webp)
-
-## Content Type
-![word detail](docs/screenshots/ContentType.webp)
-
-## Content Form
-### Insert Mode
-![word detail](docs/screenshots/ContentForm_InsertMode_Text.webp)
-![word detail](docs/screenshots/ContentForm_InsertMode_PhoneCall.webp)
-![word detail](docs/screenshots/ContentForm_InsertMode_MeCard.webp)
-
-### Edit Mode
-![word detail](docs/screenshots/ContentForm_EditMode.webp)
-
-## Show QR-Code
-### Portrait
-![word detail](docs/screenshots/ShowQrCode_Portrait.webp)
-![word detail](docs/screenshots/ShowQrCode_Portrait_Fullscreen.webp)
-![word detail](docs/screenshots/ShowQrCode_Toolbox.webp)
-![word detail](docs/screenshots/ShowQrCode_Toolbox_RemoveContent.webp)
-
-### Landscape
-![word detail](docs/screenshots/ShowQrCode_Landscape.webp)
-![word detail](docs/screenshots/ShowQrCode_Landscape_Fullscreen.webp)
 
 # TODO
 - [ ] Placing image inside the QR-Code

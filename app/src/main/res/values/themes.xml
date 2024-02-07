@@ -2,4 +2,6 @@
 <resources>
 
     <style name="Theme.QRCodeMaker" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.StartUp" parent="android:Theme.Material.Light.NoActionBar" />
 </resources>

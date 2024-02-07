@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 
 @Suppress("EnumEntryName")
 enum class Screenshot {
+    Splashscreen,
     ContentForm_InsertMode_Text,
     ContentForm_InsertMode_PhoneCall,
     ContentForm_InsertMode_MeCard,

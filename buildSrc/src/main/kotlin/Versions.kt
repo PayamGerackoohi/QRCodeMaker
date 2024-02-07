@@ -1,5 +1,8 @@
 import org.gradle.api.JavaVersion
 
+// Keep: used in the CI/CD to retrieve the app version
+private const val appVersionName = "0.0.1"
+
 object Versions {
     val app = App()
     val java = JavaVersion.VERSION_17
@@ -8,7 +11,7 @@ object Versions {
 
     class App {
         val code = 1
-        val name = "1.0.0"
+        val name = appVersionName
 
         operator fun invoke(action: App.() -> Unit) = action()
     }
@@ -22,6 +25,7 @@ object Versions {
 
         class Android {
             val core = "1.9.0"
+            val splashscreen = "1.0.1"
             val lifecycleRuntime = "2.6.2"
             val compose = Compose()
 
@@ -29,6 +33,7 @@ object Versions {
                 val activity = "1.8.0"
                 val bom = "2023.10.01"
                 val icons = "1.5.3"
+                val animation = "1.6.0"
                 val nav = "2.7.5"
             }
         }

@@ -14,4 +14,8 @@
     <string name="qrcode_type_description_text">Simple text data. Could be used for raw text, web-link, ….</string>
     <string name="qrcode_type_description_phone_call">The QrCode reader can suggest calling the number.</string>
     <string name="qrcode_type_description_me_card">The QrCode reader can suggest adding the Me-Card to the contacts.</string>
+    <string name="splashscreen">Splashscreen</string>
+    <string name="splashscreen_icon">Splashscreen Icon</string>
+    <string name="beginning">Beginning</string>
+    <string name="end">End</string>
 </resources>

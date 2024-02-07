@@ -16,8 +16,10 @@ import io.mockk.confirmVerified
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.verify
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.*
 import org.junit.Rule
@@ -62,6 +64,7 @@ class ContentFormVMTest {
         confirmVerified()
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun update_test() = runTest {
         val (viewModel, repository, currentQrCodeType, oldContent) = setupViewModel(
@@ -91,6 +94,7 @@ class ContentFormVMTest {
         // - Commit 'update'
         viewModel.update(newContent)
 
+        advanceUntilIdle()
         // - Verify the new content id is set
         assertThat(newContent.id).isEqualTo(123)
 
@@ -102,7 +106,6 @@ class ContentFormVMTest {
 
         confirmVerified()
     }
-
 
     private data class SetupResult(
         val viewModel: ContentFormVM,

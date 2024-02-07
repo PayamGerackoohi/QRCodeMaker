@@ -10,6 +10,7 @@ import androidx.compose.ui.test.hasParent
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onChildAt
 import androidx.compose.ui.test.onChildren
@@ -34,6 +35,11 @@ class MainActivityTest {
 
     @Test
     fun e2e() {
+        // For for the splashscreen animation to end
+        rule.waitUntil {
+            rule.onAllNodesWithTag("Qr-Code Contents").fetchSemanticsNodes().isNotEmpty()
+        }
+
         // Verify 'Home' page
         rule.onNodeWithTag("Qr-Code Contents").assertIsDisplayed()
 

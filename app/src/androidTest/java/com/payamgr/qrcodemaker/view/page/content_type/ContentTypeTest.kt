@@ -60,7 +60,10 @@ class ContentTypeTest {
 
         rule.setContent {
             QRCodeMakerTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
                     ContentType.Page(
                         viewModel = viewModel,
                         navigateToContentForm = navigateToContentForm,
@@ -148,5 +151,6 @@ class ContentTypeTest {
         verify { onItemClicked() }
 
         confirmVerified()
+
     }
 }
