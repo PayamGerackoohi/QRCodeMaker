@@ -21,6 +21,7 @@ import com.payamgr.qrcodemaker.data.model.Content
 import com.payamgr.qrcodemaker.data.model.QrCodeType
 import com.payamgr.qrcodemaker.data.model.event.HomeEffect
 import com.payamgr.qrcodemaker.data.model.state.HomeState
+import com.payamgr.qrcodemaker.test_util.ActivityTest
 import com.payamgr.qrcodemaker.test_util.Fake
 import com.payamgr.qrcodemaker.test_util.Screenshot
 import com.payamgr.qrcodemaker.test_util.StringId
@@ -69,93 +70,6 @@ class HomeTest {
 
         // Verify the 'Add Content' button is displayed
         rule.onNodeWithContentDescription("Add Content").assertIsDisplayed()
-    }
-
-    @Test
-    fun page_someContent_Test() {
-        MockableMavericks.initialize(app)
-
-        val textTitle = StringId(QrCodeType.Text().titleId)
-        val phoneCallTitle = StringId(QrCodeType.PhoneCall().titleId)
-        val meCardTitle = StringId(QrCodeType.MeCard().titleId)
-
-        val showQrCode = mockk<(Content) -> Unit>()
-        justRun { showQrCode(any()) }
-
-        val state = HomeState(Fake.Content.run { listOf(text, phone, meCard) })
-
-        val viewModel = object : HomeVM(state) {
-            override val effect = flow<HomeEffect> {}
-            override fun showQrCode(content: Content) = showQrCode(content)
-            override fun showContentTypePage() {}
-        }
-
-        rule.setContent {
-            QRCodeMakerTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    Home.Page(
-                        navigateToContentType = {},
-                        navigateToShowQrCode = {},
-                        viewModel = viewModel,
-                    )
-                }
-            }
-        }
-
-        // Verify the initial state
-        // - Verify the list is displayed
-        rule.onNodeWithTag("Qr-Code Contents")
-            .assertIsDisplayed()
-            .onChildren().apply {
-                assertCountEquals(3)
-
-                // -- Verify the 'Text' content
-                this[0]
-                    .assertIsDisplayed()
-                    .assert(hasTestTag("Home.QrCodeContent"))
-                    .assertTextEquals("Sample Text", textTitle.label)
-
-                // -- Verify the 'PhoneCall' content
-                this[1]
-                    .assertIsDisplayed()
-                    .assert(hasTestTag("Home.QrCodeContent"))
-                    .assertTextEquals("Sample Phone Call", phoneCallTitle.label)
-
-                // -- Verify the 'Me-Card' content
-                this[2]
-                    .assertIsDisplayed()
-                    .assert(hasTestTag("Home.QrCodeContent"))
-                    .assertTextEquals("Sample Me-Card", meCardTitle.label)
-            }
-
-        Screenshot.Home.take()
-
-        // Verify item click
-        // - Text item
-        // -- Click
-        rule.onNodeWithText(textTitle.label).performClick()
-
-        // -- Verify viewModel::showQrCode is called
-        verify { showQrCode(Fake.Content.text) }
-
-        // - PhoneCall item
-        // -- Click
-        rule.onNodeWithText(phoneCallTitle.label).performClick()
-
-        // -- Verify viewModel::showQrCode is called
-        verify { showQrCode(Fake.Content.phone) }
-
-        // - Me-Card item
-        // -- Click
-        rule.onNodeWithText(meCardTitle.label).performClick()
-
-        // -- Verify viewModel::showQrCode is called
-        verify { showQrCode(Fake.Content.meCard) }
-
-        // Verify the 'Add Content' button is displayed
-        rule.onNodeWithContentDescription("Add Content").assertIsDisplayed()
-
-        confirmVerified()
     }
 
     @Test
@@ -261,6 +175,99 @@ class HomeTest {
             // Verify click
             .performClick()
         verify { onClick() }
+
+        confirmVerified()
+    }
+}
+
+@LargeTest
+class HomeActivityTest : ActivityTest() {
+    @Test
+    fun page_someContent_Test() {
+        MockableMavericks.initialize(app)
+
+        val textTitle = StringId(QrCodeType.Text().titleId)
+        val phoneCallTitle = StringId(QrCodeType.PhoneCall().titleId)
+        val meCardTitle = StringId(QrCodeType.MeCard().titleId)
+
+        val showQrCode = mockk<(Content) -> Unit>()
+        justRun { showQrCode(any()) }
+
+        val state = HomeState(Fake.Content.run { listOf(text, phone, meCard) })
+
+        val viewModel = object : HomeVM(state) {
+            override val effect = flow<HomeEffect> {}
+            override fun showQrCode(content: Content) = showQrCode(content)
+            override fun showContentTypePage() {}
+        }
+
+        rule.setContent {
+            QRCodeMakerTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    Home.Page(
+                        navigateToContentType = {},
+                        navigateToShowQrCode = {},
+                        viewModel = viewModel,
+                    )
+                }
+            }
+        }
+
+        // Verify the initial state
+        // - Verify the list is displayed
+        rule.onNodeWithTag("Qr-Code Contents")
+            .assertIsDisplayed()
+            .onChildren().apply {
+                assertCountEquals(3)
+
+                // -- Verify the 'Text' content
+                this[0]
+                    .assertIsDisplayed()
+                    .assert(hasTestTag("Home.QrCodeContent"))
+                    .assertTextEquals("Sample Text", textTitle.label)
+
+                // -- Verify the 'PhoneCall' content
+                this[1]
+                    .assertIsDisplayed()
+                    .assert(hasTestTag("Home.QrCodeContent"))
+                    .assertTextEquals("Sample Phone Call", phoneCallTitle.label)
+
+                // -- Verify the 'Me-Card' content
+                this[2]
+                    .assertIsDisplayed()
+                    .assert(hasTestTag("Home.QrCodeContent"))
+                    .assertTextEquals("Sample Me-Card", meCardTitle.label)
+            }
+
+        Screenshot.Home.take()
+
+        // Verify item click
+        // - Text item
+        // -- Click
+        rule.onNodeWithText(textTitle.label).performClick()
+
+        // -- Verify viewModel::showQrCode is called
+        verify { showQrCode(Fake.Content.text) }
+
+        // - PhoneCall item
+        // -- Click
+        rule.onNodeWithText(phoneCallTitle.label).performClick()
+
+        // -- Verify viewModel::showQrCode is called
+        verify { showQrCode(Fake.Content.phone) }
+
+        // - Me-Card item
+        // -- Click
+        rule.onNodeWithText(meCardTitle.label).performClick()
+
+        // -- Verify viewModel::showQrCode is called
+        verify { showQrCode(Fake.Content.meCard) }
+
+        // Verify the 'Add Content' button is displayed
+        rule.onNodeWithContentDescription("Add Content").assertIsDisplayed()
 
         confirmVerified()
     }

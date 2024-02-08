@@ -1,3 +1,14 @@
+![GitHub Release](https://img.shields.io/github/v/release/PayamGerackoohi/QRCodeMaker?style=plastic)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/PayamGerackoohi/QRCodeMaker/main-cicd.yml?style=plastic)
+![Coverage](https://img.shields.io/badge/coverage-100%25-brightgreen?style=plastic)
+![GitHub top language](https://img.shields.io/github/languages/top/PayamGerackoohi/QRCodeMaker?style=plastic)
+![GitHub last commit](https://img.shields.io/github/last-commit/PayamGerackoohi/QRCodeMaker?style=plastic)
+![GitHub License](https://img.shields.io/github/license/PayamGerackoohi/QRCodeMaker?style=plastic)
+
+![GitHub repo file or directory count](https://img.shields.io/github/directory-file-count/PayamGerackoohi/QRCodeMaker?style=plastic)
+![GitHub code size in bytes](https://img.shields.io/github/languages/code-size/PayamGerackoohi/QRCodeMaker?style=plastic)
+![GitHub repo size](https://img.shields.io/github/repo-size/PayamGerackoohi/QRCodeMaker?style=plastic)
+
 # QR-Code Maker Android App
 It makes QR-Code images based on casual user contents, targeted for cell-phone usecases.
 
@@ -40,15 +51,15 @@ The screenshots are automatically captured, resized and compressed from the inst
 
 # Code Quality
 ## Test Results ✅
-### Unit Tests 💯
+### Unit Tests ![Unit Tests](https://img.shields.io/badge/passed-100%25-brightgreen?style=plastic)
 ![word detail](docs/test-results/unit_tests.webp)
-### UI Tests 💯
+### UI Tests ![UI Tests](https://img.shields.io/badge/passed-100%25-brightgreen?style=plastic)
 ![word detail](docs/test-results/ui_tests.webp)
 
 ## Test Coverage 👍
-### Kover Report 💯
+### Kover Report ![Kover Report](https://img.shields.io/badge/coverage-100%25-brightgreen?style=plastic)
 ![word detail](docs/test-results/kover.webp)
-### Jacoco Report
+### Jacoco Report ![Jacoco Report](https://img.shields.io/badge/coverage-98%25-green?style=plastic)
 ![word detail](docs/test-results/jacoco.webp)
 
 # Scripts

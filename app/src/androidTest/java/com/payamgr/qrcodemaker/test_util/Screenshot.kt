@@ -22,8 +22,8 @@ enum class Screenshot {
 fun Screenshot.take(
     fileExtensions: String = "webp",
     compressFormat: Bitmap.CompressFormat = Bitmap.CompressFormat.WEBP_LOSSY,
-    qualityPercentage: Int = 85,
-    minDimension: Int = 350,
+    qualityPercentage: Int = 100,
+    minDimension: Int = 400,
 ) = takeScreenshot(
     this,
     fileExtensions,

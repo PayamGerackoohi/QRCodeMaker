@@ -32,10 +32,12 @@ import com.airbnb.mvrx.mocking.MockableMavericks
 import com.payamgr.qrcodemaker.data.model.ErrorCorrectionCodeLevel
 import com.payamgr.qrcodemaker.data.model.event.ShowQrCodeEvent
 import com.payamgr.qrcodemaker.data.model.state.ShowQrCodeState
+import com.payamgr.qrcodemaker.test_util.ActivityTest
 import com.payamgr.qrcodemaker.test_util.Fake
 import com.payamgr.qrcodemaker.test_util.Screenshot
 import com.payamgr.qrcodemaker.test_util.app
 import com.payamgr.qrcodemaker.test_util.assertHasRole
+import com.payamgr.qrcodemaker.test_util.hideActionBar
 import com.payamgr.qrcodemaker.test_util.requestLandscapeOrientation
 import com.payamgr.qrcodemaker.test_util.requestPortraitOrientation
 import com.payamgr.qrcodemaker.test_util.take
@@ -89,327 +91,6 @@ class ShowQrCodeTest {
 
         // - Verify the 'FullScreenQrCode' is not displayed
         rule.onAllNodesWithTag("ShowQrCode.FullScreenQrCode").assertCountEquals(0)
-    }
-
-    @Test
-    fun page_portraitContent_test() = runTest {
-        rule.requestPortraitOrientation()
-
-        MockableMavericks.initialize(app)
-
-        val onEccChanged = mockk<(ErrorCorrectionCodeLevel) -> Unit>()
-        justRun { onEccChanged(any()) }
-
-        val state = ShowQrCodeState(
-            currentContent = Fake.Content.realisticText,
-            qrCode = Fake.Data.QR_CODE_REAL,
-        )
-
-        val viewModel = object : ShowQrCodeVM(state) {
-            override val effect = flow<ShowQrCodeEvent> {}
-            override fun removeContent() {}
-            override fun editContent() {}
-            override fun onEccChanged(ecc: ErrorCorrectionCodeLevel) {
-                onEccChanged(ecc)
-                setState { copy(ecc = ecc) }
-            }
-        }
-
-        rule.setContent {
-            QRCodeMakerTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    ShowQrCode.Page(
-                        viewModel = viewModel,
-                        onClose = {},
-                        navigateToContentForm = {},
-                    )
-                }
-            }
-        }
-
-        // Verify the initial state
-        // - Verify the scaffold is displayed
-        rule.onNodeWithTag("ShowQrCode.Scaffold").assertIsDisplayed()
-
-        Screenshot.ShowQrCode_Portrait.take()
-
-        // - Verify the error text is not displayed
-        rule.onAllNodesWithText("Invalid Content!").assertCountEquals(0)
-
-        // - Verify the 'PageAppBar' is displayed
-        rule.onNodeWithTag("ShowQrCode.PageAppBar").assertIsDisplayed()
-
-        // - Verify the 'Toolbox' is displayed
-        rule.onNodeWithTag("ShowQrCode.Toolbox").assertIsDisplayed()
-
-        // - Verify the 'FullScreenQrCode' is not displayed
-        rule.onAllNodesWithTag("ShowQrCode.FullScreenQrCode").assertCountEquals(0)
-
-        // - Verify the 'PageContent' is in portrait mode
-        rule.onNodeWithTag("ShowQrCode.PortraitContent").assertIsDisplayed()
-
-        // -- Verify the QR-Code is displayed
-        rule.onNodeWithContentDescription("QR-Code").assertIsDisplayed()
-
-        // -- Verify the 'ErrorCorrection.Module'
-        rule.onNodeWithTag("ErrorCorrection.Module").assertIsDisplayed()
-
-            // --- Verify the 'Medium' ECC level is selected
-            .onChildren().apply {
-                assertCountEquals(3)
-                this[0].assertTextEquals("Low").assertIsNotSelected()
-                this[1].assertTextEquals("Medium").assertIsSelected()
-                this[2].assertTextEquals("High").assertIsNotSelected()
-            }
-
-        // -- Verify the QR-Code text
-        rule.onNodeWithTag("QR-Code.Text")
-            .assertIsDisplayed()
-            .assertTextContains("Text:\naaa\nbbb\nccc")
-
-        // Verify actions
-        // - Verify ECC action
-        // -- Select 'High' ECC level
-        rule.onNodeWithText("High")
-            .assert(hasParent(hasTestTag("ErrorCorrection.Module")))
-            .performClick()
-
-        // -- Verify the ECC level is updated
-        // --- Verify the viewModel::onEccChanged is called
-        verify { onEccChanged(ErrorCorrectionCodeLevel.High) }
-
-        // --- Verify the viewModel::state is updated
-        assertThat(viewModel.awaitState().ecc).isEqualTo(ErrorCorrectionCodeLevel.High)
-
-        // --- Verify the ECC UI module is updated
-        rule.onNodeWithTag("ErrorCorrection.Module")
-            .onChildren().apply {
-                this[0].assertTextEquals("Low").assertIsNotSelected()
-                this[1].assertTextEquals("Medium").assertIsNotSelected()
-                this[2].assertTextEquals("High").assertIsSelected()
-            }
-
-        // - Verify fullscreen action
-        // -- Verify the fullscreen QR-Code is not displayed
-        rule.onAllNodesWithTag("ShowQrCode.FullScreenQrCode").assertCountEquals(0)
-
-        // -- Click on the QR-Code
-        rule.onNodeWithContentDescription("QR-Code").performClick()
-
-        // -- Verify the fullscreen QR-Code is displayed
-        rule.onNodeWithTag("ShowQrCode.FullScreenQrCode").assertIsDisplayed()
-
-        Screenshot.ShowQrCode_Portrait_Fullscreen.take()
-
-        // -- Click on the QR-Code
-        rule.onAllNodesWithContentDescription("QR-Code")
-            .filterToOne(hasTestTag("ShowQrCode.FullScreenQrCode"))
-            .performClick()
-
-        // -- Verify the fullscreen QR-Code is not displayed
-        rule.onAllNodesWithTag("ShowQrCode.FullScreenQrCode")
-            .assertCountEquals(0)
-
-        confirmVerified()
-    }
-
-    @Test
-    fun page_landscape_content_test() = runTest {
-        rule.requestLandscapeOrientation()
-
-        MockableMavericks.initialize(app)
-
-        val onEccChanged = mockk<(ErrorCorrectionCodeLevel) -> Unit>()
-        justRun { onEccChanged(any()) }
-
-        val state = ShowQrCodeState(
-            currentContent = Fake.Content.realisticText,
-            qrCode = Fake.Data.QR_CODE_REAL,
-        )
-
-        val viewModel = object : ShowQrCodeVM(state) {
-            override val effect = flow<ShowQrCodeEvent> {}
-            override fun removeContent() {}
-            override fun editContent() {}
-            override fun onEccChanged(ecc: ErrorCorrectionCodeLevel) {
-                onEccChanged(ecc)
-                setState { copy(ecc = ecc) }
-            }
-        }
-
-        rule.setContent {
-            QRCodeMakerTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    ShowQrCode.Page(
-                        viewModel = viewModel,
-                        onClose = {},
-                        navigateToContentForm = {},
-                    )
-                }
-            }
-        }
-
-        // Verify the initial state
-        // - Verify the scaffold is displayed
-        rule.onNodeWithTag("ShowQrCode.Scaffold").assertIsDisplayed()
-
-        Screenshot.ShowQrCode_Landscape.take()
-
-        // - Verify the error text is not displayed
-        rule.onAllNodesWithText("Invalid Content!").assertCountEquals(0)
-
-        // - Verify the 'PageAppBar' is displayed
-        rule.onNodeWithTag("ShowQrCode.PageAppBar").assertIsDisplayed()
-
-        // - Verify the 'Toolbox' is displayed
-        rule.onNodeWithTag("ShowQrCode.Toolbox").assertIsDisplayed()
-
-        // - Verify the 'FullScreenQrCode' is not displayed
-        rule.onAllNodesWithTag("ShowQrCode.FullScreenQrCode").assertCountEquals(0)
-
-        // - Verify the 'PageContent' is in landscape mode
-        rule.onNodeWithTag("ShowQrCode.LandscapeContent").assertIsDisplayed()
-
-        // -- Verify the QR-Code is displayed
-        rule.onNodeWithContentDescription("QR-Code").assertIsDisplayed()
-
-        // -- Verify the 'ErrorCorrection.Module'
-        rule.onNodeWithTag("ErrorCorrection.Module").assertIsDisplayed()
-
-            // --- Verify the 'Medium' ECC level is selected
-            .onChildren().apply {
-                assertCountEquals(3)
-                this[0].assertTextEquals("Low").assertIsNotSelected()
-                this[1].assertTextEquals("Medium").assertIsSelected()
-                this[2].assertTextEquals("High").assertIsNotSelected()
-            }
-
-        // -- Verify the QR-Code text
-        rule.onNodeWithTag("QR-Code.Text")
-            .assertIsDisplayed()
-            .assertTextContains("Text:\naaa\nbbb\nccc")
-
-        // Verify actions
-        // - Verify ECC action
-        // -- Select 'High' ECC level
-        rule.onNodeWithText("High")
-            .assert(hasParent(hasTestTag("ErrorCorrection.Module")))
-            .performClick()
-
-        // -- Verify the ECC level is updated
-        // --- Verify the viewModel::onEccChanged is called
-        verify { onEccChanged(ErrorCorrectionCodeLevel.High) }
-
-        // --- Verify the viewModel::state is updated
-        assertThat(viewModel.awaitState().ecc).isEqualTo(ErrorCorrectionCodeLevel.High)
-
-        // --- Verify the ECC UI module is updated
-        rule.onNodeWithTag("ErrorCorrection.Module")
-            .onChildren().apply {
-                this[0].assertTextEquals("Low").assertIsNotSelected()
-                this[1].assertTextEquals("Medium").assertIsNotSelected()
-                this[2].assertTextEquals("High").assertIsSelected()
-            }
-
-        // - Verify fullscreen action
-        // -- Verify the fullscreen QR-Code is not displayed
-        rule.onAllNodesWithTag("ShowQrCode.FullScreenQrCode").assertCountEquals(0)
-
-        // -- Click on the QR-Code
-        rule.onNodeWithContentDescription("QR-Code").performClick()
-
-        // -- Verify the fullscreen QR-Code is displayed
-        rule.onNodeWithTag("ShowQrCode.FullScreenQrCode").assertIsDisplayed()
-
-        Screenshot.ShowQrCode_Landscape_Fullscreen.take()
-
-        // -- Click on the QR-Code
-        rule.onAllNodesWithContentDescription("QR-Code")
-            .filterToOne(hasTestTag("ShowQrCode.FullScreenQrCode"))
-            .performClick()
-
-        // -- Verify the fullscreen QR-Code is not displayed
-        rule.onAllNodesWithTag("ShowQrCode.FullScreenQrCode").assertCountEquals(0)
-
-        confirmVerified()
-    }
-
-    @Test
-    fun page_Toolbox_test() {
-        rule.requestPortraitOrientation()
-
-        MockableMavericks.initialize(app)
-
-        val editContent = mockk<() -> Unit>()
-        justRun { editContent() }
-
-        val state = ShowQrCodeState(
-            currentContent = Fake.Content.realisticText,
-            qrCode = Fake.Data.QR_CODE_REAL,
-        )
-
-        val viewModel = object : ShowQrCodeVM(state) {
-            override val effect: Flow<ShowQrCodeEvent> = flow { }
-            override fun removeContent() {}
-            override fun editContent() = editContent()
-            override fun onEccChanged(ecc: ErrorCorrectionCodeLevel) {}
-        }
-
-        rule.setContent {
-            QRCodeMakerTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    ShowQrCode.Page(
-                        viewModel = viewModel,
-                        onClose = {},
-                        navigateToContentForm = {},
-                    )
-                }
-            }
-        }
-
-        // Verify initial state
-        rule.onNodeWithTag("ShowQrCode.Toolbox").assertIsDisplayed()
-
-        // Expand the toolbox
-        rule.onNodeWithContentDescription("Expand the Toolbox")
-            .assertIsDisplayed()
-            .performClick()
-
-        // Verify the toolbox is expanded
-        rule.onNodeWithContentDescription("Collapse the Toolbox").assertIsDisplayed()
-        rule.onNodeWithContentDescription("Remove Content").assertIsDisplayed()
-        rule.onNodeWithContentDescription("Edit Content").assertIsDisplayed()
-
-        Screenshot.ShowQrCode_Toolbox.take()
-
-        // Verify actions
-        // - Verify edit action
-        // -- Click on the edit button
-        rule.onNodeWithContentDescription("Edit Content").performClick()
-
-        // -- Verify the viewModel::editContent is called
-        verify { editContent() }
-
-        // - Verify the toolbox is collapsed
-        rule.onNodeWithContentDescription("Expand the Toolbox").assertIsDisplayed()
-
-            // - Expand the toolbox
-            .performClick()
-
-        // - Verify the remove action
-        // -- Click on the remove button
-        rule.onNodeWithContentDescription("Remove Content").performClick()
-
-        Screenshot.ShowQrCode_Toolbox_RemoveContent.take()
-
-        // -- Verify the remove content bottom is displayed
-        rule.onNodeWithTag("Confirmation.Module").assertIsDisplayed()
-        rule.onNodeWithText("Remove Content").assertIsDisplayed()
-        rule.onNodeWithText("Are you sure you want to remove \"Title\"?").assertIsDisplayed()
-
-        Screenshot.ShowQrCode_Toolbox_RemoveContent.take()
-
-        confirmVerified()
     }
 
     @Test
@@ -502,7 +183,10 @@ class ShowQrCodeTest {
 
         rule.setContent {
             QRCodeMakerTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
                     ShowQrCode.Toolbox(
                         onRemove = onRemove,
                         onEdit = onEdit,
@@ -894,5 +578,339 @@ class ShowQrCodeTest {
 
         // Verify the initial state
         rule.onNodeWithContentDescription("QR-Code").assertIsDisplayed()
+    }
+}
+
+@LargeTest
+class ShowQrCodeActivityTest : ActivityTest() {
+    @Test
+    fun page_portraitContent_test() = runTest {
+        rule.requestPortraitOrientation()
+
+        MockableMavericks.initialize(app)
+
+        val onEccChanged = mockk<(ErrorCorrectionCodeLevel) -> Unit>()
+        justRun { onEccChanged(any()) }
+
+        val state = ShowQrCodeState(
+            currentContent = Fake.Content.realisticText,
+            qrCode = Fake.Data.QR_CODE_REAL,
+        )
+
+        val viewModel = object : ShowQrCodeVM(state) {
+            override val effect = flow<ShowQrCodeEvent> {}
+            override fun removeContent() {}
+            override fun editContent() {}
+            override fun onEccChanged(ecc: ErrorCorrectionCodeLevel) {
+                onEccChanged(ecc)
+                setState { copy(ecc = ecc) }
+            }
+        }
+
+        rule.setContent {
+            QRCodeMakerTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    ShowQrCode.Page(
+                        viewModel = viewModel,
+                        onClose = {},
+                        navigateToContentForm = {},
+                    )
+                }
+            }
+        }
+
+        // Verify the initial state
+        // - Verify the scaffold is displayed
+        rule.onNodeWithTag("ShowQrCode.Scaffold").assertIsDisplayed()
+
+        Screenshot.ShowQrCode_Portrait.take()
+
+        // - Verify the error text is not displayed
+        rule.onAllNodesWithText("Invalid Content!").assertCountEquals(0)
+
+        // - Verify the 'PageAppBar' is displayed
+        rule.onNodeWithTag("ShowQrCode.PageAppBar").assertIsDisplayed()
+
+        // - Verify the 'Toolbox' is displayed
+        rule.onNodeWithTag("ShowQrCode.Toolbox").assertIsDisplayed()
+
+        // - Verify the 'FullScreenQrCode' is not displayed
+        rule.onAllNodesWithTag("ShowQrCode.FullScreenQrCode").assertCountEquals(0)
+
+        // - Verify the 'PageContent' is in portrait mode
+        rule.onNodeWithTag("ShowQrCode.PortraitContent").assertIsDisplayed()
+
+        // -- Verify the QR-Code is displayed
+        rule.onNodeWithContentDescription("QR-Code").assertIsDisplayed()
+
+        // -- Verify the 'ErrorCorrection.Module'
+        rule.onNodeWithTag("ErrorCorrection.Module").assertIsDisplayed()
+
+            // --- Verify the 'Medium' ECC level is selected
+            .onChildren().apply {
+                assertCountEquals(3)
+                this[0].assertTextEquals("Low").assertIsNotSelected()
+                this[1].assertTextEquals("Medium").assertIsSelected()
+                this[2].assertTextEquals("High").assertIsNotSelected()
+            }
+
+        // -- Verify the QR-Code text
+        rule.onNodeWithTag("QR-Code.Text")
+            .assertIsDisplayed()
+            .assertTextContains("Text:\naaa\nbbb\nccc")
+
+        // Verify actions
+        // - Verify ECC action
+        // -- Select 'High' ECC level
+        rule.onNodeWithText("High")
+            .assert(hasParent(hasTestTag("ErrorCorrection.Module")))
+            .performClick()
+
+        // -- Verify the ECC level is updated
+        // --- Verify the viewModel::onEccChanged is called
+        verify { onEccChanged(ErrorCorrectionCodeLevel.High) }
+
+        // --- Verify the viewModel::state is updated
+        assertThat(viewModel.awaitState().ecc).isEqualTo(ErrorCorrectionCodeLevel.High)
+
+        // --- Verify the ECC UI module is updated
+        rule.onNodeWithTag("ErrorCorrection.Module")
+            .onChildren().apply {
+                this[0].assertTextEquals("Low").assertIsNotSelected()
+                this[1].assertTextEquals("Medium").assertIsNotSelected()
+                this[2].assertTextEquals("High").assertIsSelected()
+            }
+
+        // - Verify fullscreen action
+        // -- Verify the fullscreen QR-Code is not displayed
+        rule.onAllNodesWithTag("ShowQrCode.FullScreenQrCode").assertCountEquals(0)
+
+        // -- Click on the QR-Code
+        rule.onNodeWithContentDescription("QR-Code").performClick()
+
+        // -- Verify the fullscreen QR-Code is displayed
+        rule.onNodeWithTag("ShowQrCode.FullScreenQrCode").assertIsDisplayed()
+
+        Screenshot.ShowQrCode_Portrait_Fullscreen.take()
+
+        // -- Click on the QR-Code
+        rule.onAllNodesWithContentDescription("QR-Code")
+            .filterToOne(hasTestTag("ShowQrCode.FullScreenQrCode"))
+            .performClick()
+
+        // -- Verify the fullscreen QR-Code is not displayed
+        rule.onAllNodesWithTag("ShowQrCode.FullScreenQrCode")
+            .assertCountEquals(0)
+
+        confirmVerified()
+    }
+
+    @Test
+    fun page_landscape_content_test() = runTest {
+        rule.requestLandscapeOrientation()
+        rule.hideActionBar()
+
+        MockableMavericks.initialize(app)
+
+        val onEccChanged = mockk<(ErrorCorrectionCodeLevel) -> Unit>()
+        justRun { onEccChanged(any()) }
+
+        val state = ShowQrCodeState(
+            currentContent = Fake.Content.realisticText,
+            qrCode = Fake.Data.QR_CODE_REAL,
+        )
+
+        val viewModel = object : ShowQrCodeVM(state) {
+            override val effect = flow<ShowQrCodeEvent> {}
+            override fun removeContent() {}
+            override fun editContent() {}
+            override fun onEccChanged(ecc: ErrorCorrectionCodeLevel) {
+                onEccChanged(ecc)
+                setState { copy(ecc = ecc) }
+            }
+        }
+
+        rule.setContent {
+            QRCodeMakerTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    ShowQrCode.Page(
+                        viewModel = viewModel,
+                        onClose = {},
+                        navigateToContentForm = {},
+                    )
+                }
+            }
+        }
+
+        // Verify the initial state
+        // - Verify the scaffold is displayed
+        rule.onNodeWithTag("ShowQrCode.Scaffold").assertIsDisplayed()
+
+        // - Verify the error text is not displayed
+        rule.onAllNodesWithText("Invalid Content!").assertCountEquals(0)
+
+        // - Verify the 'PageAppBar' is displayed
+        rule.onNodeWithTag("ShowQrCode.PageAppBar").assertIsDisplayed()
+
+        // - Verify the 'Toolbox' is displayed
+        rule.onNodeWithTag("ShowQrCode.Toolbox").assertIsDisplayed()
+
+        // - Verify the 'FullScreenQrCode' is not displayed
+        rule.onAllNodesWithTag("ShowQrCode.FullScreenQrCode").assertCountEquals(0)
+
+        // - Verify the 'PageContent' is in landscape mode
+        rule.onNodeWithTag("ShowQrCode.LandscapeContent").assertIsDisplayed()
+
+        // -- Verify the QR-Code is displayed
+        rule.onNodeWithContentDescription("QR-Code").assertIsDisplayed()
+
+        // -- Verify the 'ErrorCorrection.Module'
+        rule.onNodeWithTag("ErrorCorrection.Module").assertIsDisplayed()
+
+            // --- Verify the 'Medium' ECC level is selected
+            .onChildren().apply {
+                assertCountEquals(3)
+                this[0].assertTextEquals("Low").assertIsNotSelected()
+                this[1].assertTextEquals("Medium").assertIsSelected()
+                this[2].assertTextEquals("High").assertIsNotSelected()
+            }
+
+        // -- Verify the QR-Code text
+        rule.onNodeWithTag("QR-Code.Text")
+            .assertIsDisplayed()
+            .assertTextContains("Text:\naaa\nbbb\nccc")
+
+        Screenshot.ShowQrCode_Landscape.take()
+
+        // Verify actions
+        // - Verify ECC action
+        // -- Select 'High' ECC level
+        rule.onNodeWithText("High")
+            .assert(hasParent(hasTestTag("ErrorCorrection.Module")))
+            .performClick()
+
+        // -- Verify the ECC level is updated
+        // --- Verify the viewModel::onEccChanged is called
+        verify { onEccChanged(ErrorCorrectionCodeLevel.High) }
+
+        // --- Verify the viewModel::state is updated
+        assertThat(viewModel.awaitState().ecc).isEqualTo(ErrorCorrectionCodeLevel.High)
+
+        // --- Verify the ECC UI module is updated
+        rule.onNodeWithTag("ErrorCorrection.Module")
+            .onChildren().apply {
+                this[0].assertTextEquals("Low").assertIsNotSelected()
+                this[1].assertTextEquals("Medium").assertIsNotSelected()
+                this[2].assertTextEquals("High").assertIsSelected()
+            }
+
+        // - Verify fullscreen action
+        // -- Verify the fullscreen QR-Code is not displayed
+        rule.onAllNodesWithTag("ShowQrCode.FullScreenQrCode").assertCountEquals(0)
+
+        // -- Click on the QR-Code
+        rule.onNodeWithContentDescription("QR-Code").performClick()
+
+        // -- Verify the fullscreen QR-Code is displayed
+        rule.onNodeWithTag("ShowQrCode.FullScreenQrCode").assertIsDisplayed()
+
+        Screenshot.ShowQrCode_Landscape_Fullscreen.take()
+
+        // -- Click on the QR-Code
+        rule.onAllNodesWithContentDescription("QR-Code")
+            .filterToOne(hasTestTag("ShowQrCode.FullScreenQrCode"))
+            .performClick()
+
+        // -- Verify the fullscreen QR-Code is not displayed
+        rule.onAllNodesWithTag("ShowQrCode.FullScreenQrCode").assertCountEquals(0)
+
+        confirmVerified()
+    }
+
+    @Test
+    fun page_Toolbox_test() {
+        rule.requestPortraitOrientation()
+
+        MockableMavericks.initialize(app)
+
+        val editContent = mockk<() -> Unit>()
+        justRun { editContent() }
+
+        val state = ShowQrCodeState(
+            currentContent = Fake.Content.realisticText,
+            qrCode = Fake.Data.QR_CODE_REAL,
+        )
+
+        val viewModel = object : ShowQrCodeVM(state) {
+            override val effect: Flow<ShowQrCodeEvent> = flow { }
+            override fun removeContent() {}
+            override fun editContent() = editContent()
+            override fun onEccChanged(ecc: ErrorCorrectionCodeLevel) {}
+        }
+
+        rule.setContent {
+            QRCodeMakerTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    ShowQrCode.Page(
+                        viewModel = viewModel,
+                        onClose = {},
+                        navigateToContentForm = {},
+                    )
+                }
+            }
+        }
+
+        // Verify initial state
+        rule.onNodeWithTag("ShowQrCode.Toolbox").assertIsDisplayed()
+
+        // Expand the toolbox
+        rule.onNodeWithContentDescription("Expand the Toolbox")
+            .assertIsDisplayed()
+            .performClick()
+
+        // Verify the toolbox is expanded
+        rule.onNodeWithContentDescription("Collapse the Toolbox").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Remove Content").assertIsDisplayed()
+        rule.onNodeWithContentDescription("Edit Content").assertIsDisplayed()
+
+        Screenshot.ShowQrCode_Toolbox.take()
+
+        // Verify actions
+        // - Verify edit action
+        // -- Click on the edit button
+        rule.onNodeWithContentDescription("Edit Content").performClick()
+
+        // -- Verify the viewModel::editContent is called
+        verify { editContent() }
+
+        // - Verify the toolbox is collapsed
+        rule.onNodeWithContentDescription("Expand the Toolbox").assertIsDisplayed()
+
+            // - Expand the toolbox
+            .performClick()
+
+        // - Verify the remove action
+        // -- Click on the remove button
+        rule.onNodeWithContentDescription("Remove Content").performClick()
+
+        Screenshot.ShowQrCode_Toolbox_RemoveContent.take()
+
+        // -- Verify the remove content bottom is displayed
+        rule.onNodeWithTag("Confirmation.Module").assertIsDisplayed()
+        rule.onNodeWithText("Remove Content").assertIsDisplayed()
+        rule.onNodeWithText("Are you sure you want to remove \"Title\"?").assertIsDisplayed()
+
+        Screenshot.ShowQrCode_Toolbox_RemoveContent.take()
+
+        confirmVerified()
     }
 }

@@ -28,6 +28,7 @@ import androidx.compose.ui.test.performTextClearance
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.test.filters.LargeTest
+import androidx.test.filters.MediumTest
 import com.airbnb.mvrx.mocking.MockableMavericks
 import com.payamgr.qrcodemaker.R
 import com.payamgr.qrcodemaker.data.database.entity.MeCardContent
@@ -40,6 +41,7 @@ import com.payamgr.qrcodemaker.data.model.InputId
 import com.payamgr.qrcodemaker.data.model.QrCodeType
 import com.payamgr.qrcodemaker.data.model.event.ContentFormEffect
 import com.payamgr.qrcodemaker.data.model.state.ContentFormState
+import com.payamgr.qrcodemaker.test_util.ActivityTest
 import com.payamgr.qrcodemaker.test_util.Fake
 import com.payamgr.qrcodemaker.test_util.Screenshot
 import com.payamgr.qrcodemaker.test_util.StringId
@@ -59,432 +61,10 @@ import org.assertj.core.api.Assertions.*
 import org.junit.Rule
 import org.junit.Test
 
-@LargeTest
+@MediumTest
 class ContentFormTest {
     @get:Rule
     val rule = createComposeRule()
-
-    @Test
-    fun page_insertMode_Text_test() = runTest {
-        MockableMavericks.initialize(app)
-
-        val qrCodeTypeError = "No currentQrCodeType!"
-
-        val add = mockk<(Content) -> Unit>()
-        val onClose = mockk<() -> Unit>()
-        justRun { add(any()) }
-        justRun { onClose() }
-
-        val state = ContentFormState(contentTitle = Fake.Data.TITLE)
-
-        val viewModel = object : ContentFormVM(state) {
-            var effectChannel = Channel<ContentFormEffect>()
-            override val effect: Flow<ContentFormEffect> = effectChannel.receiveAsFlow()
-            override fun add(content: Content) = add(content)
-            override fun update(content: Content) {}
-            fun update(qrCodeType: QrCodeType) = setState { copy(currentQrCodeType = qrCodeType) }
-        }
-
-        rule.setContent {
-            QRCodeMakerTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    ContentForm.Page(
-                        viewModel = viewModel,
-                        onClose = { onClose() },
-                        isEditMode = false,
-                    )
-                }
-            }
-        }
-
-        // 'No currentQrCodeType' test
-        rule.onNodeWithText(qrCodeTypeError).assertIsDisplayed()
-
-        // Verify initial state
-        viewModel.update(QrCodeType.Text())
-
-        // - Verify no QR-Code type error
-        rule.waitUntil {
-            rule.onAllNodesWithText(qrCodeTypeError).fetchSemanticsNodes().isEmpty()
-        }
-
-        Screenshot.ContentForm_InsertMode_Text.take()
-
-        // - Verify TopAppBar
-        rule.onNodeWithTag("ContentForm.PageAppBar")
-            .assertIsDisplayed()
-            .onChild()
-            .assertTextEquals(app.getString(R.string.text))
-
-        // - Verify PageContent
-        rule.onNodeWithTag("ContentForm.PageContent").assertIsDisplayed()
-
-        // -- Verify 'Description'
-        rule.onNodeWithContentDescription("Description")
-            .assertIsDisplayed()
-            .assertTextEquals("Simple text data. Could be used for raw text, web-link, ….")
-
-        // -- Verify 'Title'
-        rule.onNodeWithTag("ContentForm.Title")
-            .assertIsDisplayed()
-            .assertTextEquals("* Title", "")
-
-        // -- Verify inputs
-        rule.onNodeWithTag("ContentForm.SingleItem")
-            .assertIsDisplayed()
-            .assertTextEquals("* Text", "")
-
-        // -- Verify 'ConfirmButton'
-        rule.onNodeWithTag("ContentForm.ConfirmButton")
-            .assertIsDisplayed()
-            .assertTextEquals("Confirm")
-            .assertHasRole(Role.Button)
-
-        // Data entry test
-        // - Insert inputs
-        rule.onNodeWithTag("ContentForm.Title")
-            .performTextInput(Fake.Data.TITLE)
-        rule.onNodeWithTag("ContentForm.SingleItem")
-            .performTextInput(Fake.Data.TEXT)
-
-        // - Confirm the form
-        rule.onNodeWithTag("ContentForm.ConfirmButton").performClick()
-
-        // - Verify 'viewModel.add(Content)' is called
-        verify { add(TextContent(Fake.Data.TITLE, Fake.Data.TEXT)) }
-
-        // Events Test
-        // - Sending ContentFormEvent.ClosePage
-        viewModel.effectChannel.send(ContentFormEffect.ClosePage)
-
-        // - Verify 'onClose' is called
-        verify { onClose() }
-
-        confirmVerified()
-    }
-
-    @Test
-    fun page_insertMode_PhoneCall_test() = runTest {
-        MockableMavericks.initialize(app)
-
-        val qrCodeTypeError = "No currentQrCodeType!"
-
-        val add = mockk<(Content) -> Unit>()
-        val onClose = mockk<() -> Unit>()
-        justRun { add(any()) }
-        justRun { onClose() }
-
-        val state = ContentFormState(contentTitle = Fake.Data.TITLE)
-
-        val viewModel = object : ContentFormVM(state) {
-            var effectChannel = Channel<ContentFormEffect>()
-            override val effect: Flow<ContentFormEffect> = effectChannel.receiveAsFlow()
-            override fun add(content: Content) = add(content)
-            override fun update(content: Content) {}
-            fun update(qrCodeType: QrCodeType) = setState { copy(currentQrCodeType = qrCodeType) }
-        }
-
-        rule.setContent {
-            QRCodeMakerTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    ContentForm.Page(
-                        viewModel = viewModel,
-                        onClose = { onClose() },
-                        isEditMode = false,
-                    )
-                }
-            }
-        }
-
-        // 'No currentQrCodeType' test
-        rule.onNodeWithText(qrCodeTypeError).assertIsDisplayed()
-
-        // Verify initial state
-        viewModel.update(QrCodeType.PhoneCall())
-
-        // - Verify no QR-Code type error
-        rule.waitUntil {
-            rule.onAllNodesWithText(qrCodeTypeError).fetchSemanticsNodes().isEmpty()
-        }
-
-        Screenshot.ContentForm_InsertMode_PhoneCall.take()
-
-        // - Verify TopAppBar
-        rule.onNodeWithTag("ContentForm.PageAppBar")
-            .assertIsDisplayed()
-            .onChild()
-            .assertTextEquals(app.getString(R.string.phone_call))
-
-        // - Verify PageContent
-        rule.onNodeWithTag("ContentForm.PageContent").assertIsDisplayed()
-
-        // -- Verify 'Description'
-        rule.onNodeWithContentDescription("Description")
-            .assertIsDisplayed()
-            .assertTextEquals("The QrCode reader can suggest calling the number.")
-
-        // -- Verify 'Title'
-        rule.onNodeWithTag("ContentForm.Title")
-            .assertIsDisplayed()
-            .assertTextEquals("* Title", "")
-
-        // -- Verify inputs
-        rule.onNodeWithTag("ContentForm.SingleItem")
-            .assertIsDisplayed()
-            .assertTextEquals("* Phone", "")
-
-        // -- Verify 'ConfirmButton'
-        rule.onNodeWithTag("ContentForm.ConfirmButton")
-            .assertIsDisplayed()
-            .assertTextEquals("Confirm")
-            .assertHasRole(Role.Button)
-
-        // Data entry test
-        // - Insert inputs
-        rule.onNodeWithTag("ContentForm.Title").performTextInput(Fake.Data.TITLE)
-        rule.onNodeWithTag("ContentForm.SingleItem").performTextInput(Fake.Data.PHONE)
-
-        // - Confirm the form
-        rule.onNodeWithTag("ContentForm.ConfirmButton").performClick()
-
-        // - Verify 'viewModel.add(Content)' is called
-        verify { add(PhoneCallContent(Fake.Data.TITLE, Fake.Data.PHONE)) }
-
-        // Events Test
-        // - Sending ContentFormEvent.ClosePage
-        viewModel.effectChannel.send(ContentFormEffect.ClosePage)
-
-        // - Verify 'onClose' is called
-        verify { onClose() }
-
-        confirmVerified()
-    }
-
-    @Test
-    fun page_insertMode_MeCard_test() = runTest {
-        MockableMavericks.initialize(app)
-
-        val qrCodeTypeError = "No currentQrCodeType!"
-
-        val add = mockk<(Content) -> Unit>()
-        val onClose = mockk<() -> Unit>()
-        justRun { add(any()) }
-        justRun { onClose() }
-
-        val state = ContentFormState(contentTitle = Fake.Data.TITLE)
-
-        val viewModel = object : ContentFormVM(state) {
-            var effectChannel = Channel<ContentFormEffect>()
-            override val effect: Flow<ContentFormEffect> = effectChannel.receiveAsFlow()
-            override fun add(content: Content) = add(content)
-            override fun update(content: Content) {}
-            fun update(qrCodeType: QrCodeType) = setState { copy(currentQrCodeType = qrCodeType) }
-        }
-
-        rule.setContent {
-            QRCodeMakerTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    ContentForm.Page(
-                        viewModel = viewModel,
-                        onClose = { onClose() },
-                        isEditMode = false,
-                    )
-                }
-            }
-        }
-
-        // 'No currentQrCodeType' test
-        rule.onNodeWithText(qrCodeTypeError).assertIsDisplayed()
-
-        // Verify initial state
-        viewModel.update(QrCodeType.MeCard())
-
-        // - Verify no QR-Code type error
-        rule.waitUntil {
-            rule.onAllNodesWithText(qrCodeTypeError).fetchSemanticsNodes().isEmpty()
-        }
-
-        Screenshot.ContentForm_InsertMode_MeCard.take()
-
-        // - Verify TopAppBar
-        rule.onNodeWithTag("ContentForm.PageAppBar")
-            .assertIsDisplayed()
-            .onChild()
-            .assertTextEquals(app.getString(R.string.me_card))
-
-        // - Verify PageContent
-        rule.onNodeWithTag("ContentForm.PageContent").assertIsDisplayed()
-
-        // -- Verify 'Description'
-        rule.onNodeWithContentDescription("Description")
-            .assertIsDisplayed()
-            .assertTextEquals("The QrCode reader can suggest adding the Me-Card to the contacts.")
-
-        // -- Verify 'Title'
-        rule.onNodeWithTag("ContentForm.Title")
-            .assertIsDisplayed()
-            .assertTextEquals("* Title", "")
-
-        // -- Verify inputs
-        // --- Verify the 'Name' group input
-        rule.onNodeWithTag("ContentForm.GroupItem(Name)")
-            .assertIsDisplayed()
-            .onChildren().apply {
-                assertCountEquals(3)
-                this[0].assert(hasTestTag("GroupItem.Title"))
-                    .assertIsDisplayed()
-                    .assertTextEquals("Name")
-
-                this[1].assert(hasTestTag("ContentForm.SingleItem"))
-                    .assertIsDisplayed()
-                    .assertTextEquals("* First Name", "")
-
-                this[2].assert(hasTestTag("ContentForm.SingleItem"))
-                    .assertIsDisplayed()
-                    .assertTextEquals("* Last Name", "")
-            }
-
-        // --- Verify the 'Phone' input
-        rule.onAllNodesWithTag("ContentForm.SingleItem")
-            .filterToOne(hasText("* Phone"))
-            .assertIsDisplayed()
-
-        // -- Verify 'ConfirmButton'
-        rule.onNodeWithTag("ContentForm.ConfirmButton")
-            .assertIsDisplayed()
-            .assertTextEquals("Confirm")
-            .assertHasRole(Role.Button)
-
-        // Data entry test
-        // - Insert inputs
-        rule.onNodeWithTag("ContentForm.Title").performTextInput(Fake.Data.TITLE)
-        rule.onAllNodesWithTag("ContentForm.SingleItem").apply {
-            this[0].performTextInput(Fake.Data.FIRST_NAME)
-            this[1].performTextInput(Fake.Data.LAST_NAME)
-            this[2].performTextInput(Fake.Data.PHONE)
-        }
-
-        // - Confirm the form
-        rule.onNodeWithTag("ContentForm.ConfirmButton").performClick()
-
-        // - Verify 'viewModel.add(Content)' is called
-        verify { add(Fake.Data.run { MeCardContent(TITLE, FIRST_NAME, LAST_NAME, PHONE) }) }
-
-        // Events Test
-        // - Sending ContentFormEvent.ClosePage
-        viewModel.effectChannel.send(ContentFormEffect.ClosePage)
-
-        // - Verify 'onClose' is called
-        verify { onClose() }
-
-        confirmVerified()
-    }
-
-    @Test
-    fun page_edit_mode_test() = runTest {
-        MockableMavericks.initialize(app)
-
-        val qrCodeTypeError = "No currentQrCodeType!"
-
-        val update = mockk<(Content) -> Unit>()
-        val onClose = mockk<() -> Unit>()
-        justRun { update(any()) }
-        justRun { onClose() }
-
-        val state = ContentFormState(
-            currentContent = Fake.Content.text,
-            contentTitle = Fake.Data.TITLE,
-        )
-
-        val viewModel = object : ContentFormVM(state) {
-            var eventChannel = Channel<ContentFormEffect>()
-            override val effect: Flow<ContentFormEffect> = eventChannel.receiveAsFlow()
-            override fun add(content: Content) {}
-            override fun update(content: Content) = update(content)
-            fun update(qrCodeType: QrCodeType) = setState { copy(currentQrCodeType = qrCodeType) }
-        }
-
-        rule.setContent {
-            QRCodeMakerTheme {
-                Surface(modifier = Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    ContentForm.Page(
-                        viewModel = viewModel,
-                        onClose = { onClose() },
-                        isEditMode = true,
-                    )
-                }
-            }
-        }
-
-        // 'No currentQrCodeType' test
-        rule.onNodeWithText(qrCodeTypeError).assertIsDisplayed()
-
-        // Verify initial state
-        viewModel.update(QrCodeType.Text(Fake.Data.TEXT))
-
-        // - Verify no QR-Code type error
-        rule.waitUntil {
-            rule.onAllNodesWithText(qrCodeTypeError).fetchSemanticsNodes().isEmpty()
-        }
-
-        Screenshot.ContentForm_EditMode.take()
-
-        // - Verify TopAppBar
-        rule.onNodeWithTag("ContentForm.PageAppBar")
-            .assertIsDisplayed()
-            .onChild()
-            .assertTextEquals(app.getString(R.string.text))
-
-        // - Verify PageContent
-        rule.onNodeWithTag("ContentForm.PageContent").assertIsDisplayed()
-
-        // -- Verify 'Description'
-        rule.onNodeWithContentDescription("Description")
-            .assertIsDisplayed()
-            .assertTextEquals("Simple text data. Could be used for raw text, web-link, ….")
-
-        // -- Verify 'Title'
-        rule.onNodeWithTag("ContentForm.Title")
-            .assertIsDisplayed()
-            .assertTextEquals("* Title", "Title")
-
-        // -- Verify inputs
-        rule.onNodeWithTag("ContentForm.SingleItem")
-            .assertIsDisplayed()
-            .assertTextEquals("* Text", "Text-txeT")
-
-        // -- Verify 'ConfirmButton'
-        rule.onNodeWithTag("ContentForm.ConfirmButton")
-            .assertIsDisplayed()
-            .assertTextEquals("Confirm")
-            .assertHasRole(Role.Button)
-
-        // Data entry test
-        // - Insert inputs
-        rule.onNodeWithTag("ContentForm.Title").apply {
-            performTextClearance()
-            performTextInput(Fake.Data.TITLE2)
-        }
-        rule.onNodeWithTag("ContentForm.SingleItem").apply {
-            performTextClearance()
-            performTextInput(Fake.Data.TEXT2)
-        }
-
-        // - Confirm the form
-        rule.onNodeWithTag("ContentForm.ConfirmButton").performClick()
-
-        // - Verify 'viewModel.update(Content)' is called
-        verify { update(TextContent(Fake.Data.TITLE2, Fake.Data.TEXT2)) }
-
-        // Events Test
-        // - Sending ContentFormEvent.ClosePage
-        viewModel.eventChannel.send(ContentFormEffect.ClosePage)
-
-        // - Verify 'onClose' is called
-        verify { onClose() }
-
-        confirmVerified()
-    }
 
     @Test
     fun pageContent_test() {
@@ -814,6 +394,443 @@ class ContentFormTest {
 
         // - Verify the content
         verify { showSnackbar("Invalid Input") }
+
+        confirmVerified()
+    }
+}
+
+@LargeTest
+class ContentFormActivityTest : ActivityTest() {
+    @Test
+    fun page_insertMode_Text_test() = runTest {
+        MockableMavericks.initialize(app)
+
+        val qrCodeTypeError = "No currentQrCodeType!"
+
+        val add = mockk<(Content) -> Unit>()
+        val onClose = mockk<() -> Unit>()
+        justRun { add(any()) }
+        justRun { onClose() }
+
+        val state = ContentFormState(contentTitle = Fake.Data.TITLE)
+
+        val viewModel = object : ContentFormVM(state) {
+            var effectChannel = Channel<ContentFormEffect>()
+            override val effect: Flow<ContentFormEffect> = effectChannel.receiveAsFlow()
+            override fun add(content: Content) = add(content)
+            override fun update(content: Content) {}
+            fun update(qrCodeType: QrCodeType) = setState { copy(currentQrCodeType = qrCodeType) }
+        }
+
+        rule.setContent {
+            QRCodeMakerTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    ContentForm.Page(
+                        viewModel = viewModel,
+                        onClose = { onClose() },
+                        isEditMode = false,
+                    )
+                }
+            }
+        }
+
+        // 'No currentQrCodeType' test
+        rule.onNodeWithText(qrCodeTypeError).assertIsDisplayed()
+
+        // Verify initial state
+        viewModel.update(QrCodeType.Text())
+
+        // - Verify no QR-Code type error
+        rule.waitUntil {
+            rule.onAllNodesWithText(qrCodeTypeError).fetchSemanticsNodes().isEmpty()
+        }
+
+        // - Verify TopAppBar
+        rule.onNodeWithTag("ContentForm.PageAppBar")
+            .assertIsDisplayed()
+            .onChild()
+            .assertTextEquals(app.getString(R.string.text))
+
+        Screenshot.ContentForm_InsertMode_Text.take()
+
+        // - Verify PageContent
+        rule.onNodeWithTag("ContentForm.PageContent").assertIsDisplayed()
+
+        // -- Verify 'Description'
+        rule.onNodeWithContentDescription("Description")
+            .assertIsDisplayed()
+            .assertTextEquals("Simple text data. Could be used for raw text, web-link, ….")
+
+        // -- Verify 'Title'
+        rule.onNodeWithTag("ContentForm.Title")
+            .assertIsDisplayed()
+            .assertTextEquals("* Title", "")
+
+        // -- Verify inputs
+        rule.onNodeWithTag("ContentForm.SingleItem")
+            .assertIsDisplayed()
+            .assertTextEquals("* Text", "")
+
+        // -- Verify 'ConfirmButton'
+        rule.onNodeWithTag("ContentForm.ConfirmButton")
+            .assertIsDisplayed()
+            .assertTextEquals("Confirm")
+            .assertHasRole(Role.Button)
+
+        // Data entry test
+        // - Insert inputs
+        rule.onNodeWithTag("ContentForm.Title")
+            .performTextInput(Fake.Data.TITLE)
+        rule.onNodeWithTag("ContentForm.SingleItem")
+            .performTextInput(Fake.Data.TEXT)
+
+        // - Confirm the form
+        rule.onNodeWithTag("ContentForm.ConfirmButton").performClick()
+
+        // - Verify 'viewModel.add(Content)' is called
+        verify { add(TextContent(Fake.Data.TITLE, Fake.Data.TEXT)) }
+
+        // Events Test
+        // - Sending ContentFormEvent.ClosePage
+        viewModel.effectChannel.send(ContentFormEffect.ClosePage)
+
+        // - Verify 'onClose' is called
+        verify { onClose() }
+
+        confirmVerified()
+    }
+
+    @Test
+    fun page_insertMode_PhoneCall_test() = runTest {
+        MockableMavericks.initialize(app)
+
+        val qrCodeTypeError = "No currentQrCodeType!"
+
+        val add = mockk<(Content) -> Unit>()
+        val onClose = mockk<() -> Unit>()
+        justRun { add(any()) }
+        justRun { onClose() }
+
+        val state = ContentFormState(contentTitle = Fake.Data.TITLE)
+
+        val viewModel = object : ContentFormVM(state) {
+            var effectChannel = Channel<ContentFormEffect>()
+            override val effect: Flow<ContentFormEffect> = effectChannel.receiveAsFlow()
+            override fun add(content: Content) = add(content)
+            override fun update(content: Content) {}
+            fun update(qrCodeType: QrCodeType) = setState { copy(currentQrCodeType = qrCodeType) }
+        }
+
+        rule.setContent {
+            QRCodeMakerTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    ContentForm.Page(
+                        viewModel = viewModel,
+                        onClose = { onClose() },
+                        isEditMode = false,
+                    )
+                }
+            }
+        }
+
+        // 'No currentQrCodeType' test
+        rule.onNodeWithText(qrCodeTypeError).assertIsDisplayed()
+
+        // Verify initial state
+        viewModel.update(QrCodeType.PhoneCall())
+
+        // - Verify no QR-Code type error
+        rule.waitUntil {
+            rule.onAllNodesWithText(qrCodeTypeError).fetchSemanticsNodes().isEmpty()
+        }
+
+        // - Verify TopAppBar
+        rule.onNodeWithTag("ContentForm.PageAppBar")
+            .assertIsDisplayed()
+            .onChild()
+            .assertTextEquals(app.getString(R.string.phone_call))
+
+        Screenshot.ContentForm_InsertMode_PhoneCall.take()
+
+        // - Verify PageContent
+        rule.onNodeWithTag("ContentForm.PageContent").assertIsDisplayed()
+
+        // -- Verify 'Description'
+        rule.onNodeWithContentDescription("Description")
+            .assertIsDisplayed()
+            .assertTextEquals("The QrCode reader can suggest calling the number.")
+
+        // -- Verify 'Title'
+        rule.onNodeWithTag("ContentForm.Title")
+            .assertIsDisplayed()
+            .assertTextEquals("* Title", "")
+
+        // -- Verify inputs
+        rule.onNodeWithTag("ContentForm.SingleItem")
+            .assertIsDisplayed()
+            .assertTextEquals("* Phone", "")
+
+        // -- Verify 'ConfirmButton'
+        rule.onNodeWithTag("ContentForm.ConfirmButton")
+            .assertIsDisplayed()
+            .assertTextEquals("Confirm")
+            .assertHasRole(Role.Button)
+
+        // Data entry test
+        // - Insert inputs
+        rule.onNodeWithTag("ContentForm.Title").performTextInput(Fake.Data.TITLE)
+        rule.onNodeWithTag("ContentForm.SingleItem").performTextInput(Fake.Data.PHONE)
+
+        // - Confirm the form
+        rule.onNodeWithTag("ContentForm.ConfirmButton").performClick()
+
+        // - Verify 'viewModel.add(Content)' is called
+        verify { add(PhoneCallContent(Fake.Data.TITLE, Fake.Data.PHONE)) }
+
+        // Events Test
+        // - Sending ContentFormEvent.ClosePage
+        viewModel.effectChannel.send(ContentFormEffect.ClosePage)
+
+        // - Verify 'onClose' is called
+        verify { onClose() }
+
+        confirmVerified()
+    }
+
+    @Test
+    fun page_insertMode_MeCard_test() = runTest {
+        MockableMavericks.initialize(app)
+
+        val qrCodeTypeError = "No currentQrCodeType!"
+
+        val add = mockk<(Content) -> Unit>()
+        val onClose = mockk<() -> Unit>()
+        justRun { add(any()) }
+        justRun { onClose() }
+
+        val state = ContentFormState(contentTitle = Fake.Data.TITLE)
+
+        val viewModel = object : ContentFormVM(state) {
+            var effectChannel = Channel<ContentFormEffect>()
+            override val effect: Flow<ContentFormEffect> = effectChannel.receiveAsFlow()
+            override fun add(content: Content) = add(content)
+            override fun update(content: Content) {}
+            fun update(qrCodeType: QrCodeType) = setState { copy(currentQrCodeType = qrCodeType) }
+        }
+
+        rule.setContent {
+            QRCodeMakerTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    ContentForm.Page(
+                        viewModel = viewModel,
+                        onClose = { onClose() },
+                        isEditMode = false,
+                    )
+                }
+            }
+        }
+
+        // 'No currentQrCodeType' test
+        rule.onNodeWithText(qrCodeTypeError).assertIsDisplayed()
+
+        // Verify initial state
+        viewModel.update(QrCodeType.MeCard())
+
+        // - Verify no QR-Code type error
+        rule.waitUntil {
+            rule.onAllNodesWithText(qrCodeTypeError).fetchSemanticsNodes().isEmpty()
+        }
+
+        // - Verify TopAppBar
+        rule.onNodeWithTag("ContentForm.PageAppBar")
+            .assertIsDisplayed()
+            .onChild()
+            .assertTextEquals(app.getString(R.string.me_card))
+
+        // - Verify PageContent
+        rule.onNodeWithTag("ContentForm.PageContent").assertIsDisplayed()
+
+        // -- Verify 'Description'
+        rule.onNodeWithContentDescription("Description")
+            .assertIsDisplayed()
+            .assertTextEquals("The QrCode reader can suggest adding the Me-Card to the contacts.")
+
+        // -- Verify 'Title'
+        rule.onNodeWithTag("ContentForm.Title")
+            .assertIsDisplayed()
+            .assertTextEquals("* Title", "")
+
+        // -- Verify inputs
+        // --- Verify the 'Name' group input
+        rule.onNodeWithTag("ContentForm.GroupItem(Name)")
+            .assertIsDisplayed()
+            .onChildren().apply {
+                assertCountEquals(3)
+                this[0].assert(hasTestTag("GroupItem.Title"))
+                    .assertIsDisplayed()
+                    .assertTextEquals("Name")
+
+                this[1].assert(hasTestTag("ContentForm.SingleItem"))
+                    .assertIsDisplayed()
+                    .assertTextEquals("* First Name", "")
+
+                this[2].assert(hasTestTag("ContentForm.SingleItem"))
+                    .assertIsDisplayed()
+                    .assertTextEquals("* Last Name", "")
+            }
+
+        // --- Verify the 'Phone' input
+        rule.onAllNodesWithTag("ContentForm.SingleItem")
+            .filterToOne(hasText("* Phone"))
+            .assertIsDisplayed()
+
+        // -- Verify 'ConfirmButton'
+        rule.onNodeWithTag("ContentForm.ConfirmButton")
+            .assertIsDisplayed()
+            .assertTextEquals("Confirm")
+            .assertHasRole(Role.Button)
+
+        Screenshot.ContentForm_InsertMode_MeCard.take()
+
+        // Data entry test
+        // - Insert inputs
+        rule.onNodeWithTag("ContentForm.Title").performTextInput(Fake.Data.TITLE)
+        rule.onAllNodesWithTag("ContentForm.SingleItem").apply {
+            this[0].performTextInput(Fake.Data.FIRST_NAME)
+            this[1].performTextInput(Fake.Data.LAST_NAME)
+            this[2].performTextInput(Fake.Data.PHONE)
+        }
+
+        // - Confirm the form
+        rule.onNodeWithTag("ContentForm.ConfirmButton").performClick()
+
+        // - Verify 'viewModel.add(Content)' is called
+        verify { add(Fake.Data.run { MeCardContent(TITLE, FIRST_NAME, LAST_NAME, PHONE) }) }
+
+        // Events Test
+        // - Sending ContentFormEvent.ClosePage
+        viewModel.effectChannel.send(ContentFormEffect.ClosePage)
+
+        // - Verify 'onClose' is called
+        verify { onClose() }
+
+        confirmVerified()
+    }
+
+    @Test
+    fun page_edit_mode_test() = runTest {
+        MockableMavericks.initialize(app)
+
+        val qrCodeTypeError = "No currentQrCodeType!"
+
+        val update = mockk<(Content) -> Unit>()
+        val onClose = mockk<() -> Unit>()
+        justRun { update(any()) }
+        justRun { onClose() }
+
+        val state = ContentFormState(
+            currentContent = Fake.Content.text,
+            contentTitle = Fake.Data.TITLE,
+        )
+
+        val viewModel = object : ContentFormVM(state) {
+            var eventChannel = Channel<ContentFormEffect>()
+            override val effect: Flow<ContentFormEffect> = eventChannel.receiveAsFlow()
+            override fun add(content: Content) {}
+            override fun update(content: Content) = update(content)
+            fun update(qrCodeType: QrCodeType) = setState { copy(currentQrCodeType = qrCodeType) }
+        }
+
+        rule.setContent {
+            QRCodeMakerTheme {
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    ContentForm.Page(
+                        viewModel = viewModel,
+                        onClose = { onClose() },
+                        isEditMode = true,
+                    )
+                }
+            }
+        }
+
+        // 'No currentQrCodeType' test
+        rule.onNodeWithText(qrCodeTypeError).assertIsDisplayed()
+
+        // Verify initial state
+        viewModel.update(QrCodeType.Text(Fake.Data.TEXT))
+
+        // - Verify no QR-Code type error
+        rule.waitUntil {
+            rule.onAllNodesWithText(qrCodeTypeError).fetchSemanticsNodes().isEmpty()
+        }
+
+        // - Verify TopAppBar
+        rule.onNodeWithTag("ContentForm.PageAppBar")
+            .assertIsDisplayed()
+            .onChild()
+            .assertTextEquals(app.getString(R.string.text))
+
+        Screenshot.ContentForm_EditMode.take()
+
+        // - Verify PageContent
+        rule.onNodeWithTag("ContentForm.PageContent").assertIsDisplayed()
+
+        // -- Verify 'Description'
+        rule.onNodeWithContentDescription("Description")
+            .assertIsDisplayed()
+            .assertTextEquals("Simple text data. Could be used for raw text, web-link, ….")
+
+        // -- Verify 'Title'
+        rule.onNodeWithTag("ContentForm.Title")
+            .assertIsDisplayed()
+            .assertTextEquals("* Title", "Title")
+
+        // -- Verify inputs
+        rule.onNodeWithTag("ContentForm.SingleItem")
+            .assertIsDisplayed()
+            .assertTextEquals("* Text", "Text-txeT")
+
+        // -- Verify 'ConfirmButton'
+        rule.onNodeWithTag("ContentForm.ConfirmButton")
+            .assertIsDisplayed()
+            .assertTextEquals("Confirm")
+            .assertHasRole(Role.Button)
+
+        // Data entry test
+        // - Insert inputs
+        rule.onNodeWithTag("ContentForm.Title").apply {
+            performTextClearance()
+            performTextInput(Fake.Data.TITLE2)
+        }
+        rule.onNodeWithTag("ContentForm.SingleItem").apply {
+            performTextClearance()
+            performTextInput(Fake.Data.TEXT2)
+        }
+
+        // - Confirm the form
+        rule.onNodeWithTag("ContentForm.ConfirmButton").performClick()
+
+        // - Verify 'viewModel.update(Content)' is called
+        verify { update(TextContent(Fake.Data.TITLE2, Fake.Data.TEXT2)) }
+
+        // Events Test
+        // - Sending ContentFormEvent.ClosePage
+        viewModel.eventChannel.send(ContentFormEffect.ClosePage)
+
+        // - Verify 'onClose' is called
+        verify { onClose() }
 
         confirmVerified()
     }

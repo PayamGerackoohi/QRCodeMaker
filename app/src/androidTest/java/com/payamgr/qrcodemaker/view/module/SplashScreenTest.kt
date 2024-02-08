@@ -6,9 +6,10 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.test.hasStateDescription
 import androidx.compose.ui.test.isDisplayed
-import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.test.filters.MediumTest
+import com.payamgr.qrcodemaker.test_util.ActivityTest
 import com.payamgr.qrcodemaker.test_util.Screenshot
 import com.payamgr.qrcodemaker.test_util.take
 import com.payamgr.qrcodemaker.view.theme.QRCodeMakerTheme
@@ -18,13 +19,10 @@ import io.mockk.mockk
 import io.mockk.verify
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.test.runTest
-import org.junit.Rule
 import org.junit.Test
 
-class SplashScreenTest {
-    @get:Rule
-    val rule = createComposeRule()
-
+@MediumTest
+class SplashScreenActivityTest:ActivityTest() {
     @Test
     fun moduleTest() = runTest {
         val onEnd = mockk<() -> Unit>()
